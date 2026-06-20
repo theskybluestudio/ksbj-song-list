@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { siteDescription, siteName, siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,8 +14,39 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "KSBJ Song History",
-  description: "Search and browse songs played on KSBJ using a Google Sheet as the source of truth.",
+  metadataBase: new URL(siteUrl),
+  title: "KSBJ Song History | Recently Played Songs & Playlist",
+  description: siteDescription,
+  keywords: [
+    "KSBJ",
+    "KSBJ playlist",
+    "KSBJ recently played",
+    "KSBJ song list",
+    "Christian radio playlist",
+    "Houston radio songs",
+    "YouTube Music playlist",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  applicationName: siteName,
+  category: "music",
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title: "KSBJ Song History | Recently Played Songs & Playlist",
+    description: siteDescription,
+    url: "/",
+    type: "website",
+    siteName,
+  },
+  twitter: {
+    card: "summary",
+    title: "KSBJ Song History | Recently Played Songs & Playlist",
+    description: siteDescription,
+  },
 };
 
 export default function RootLayout({

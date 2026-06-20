@@ -178,7 +178,7 @@ export function SongDashboard({
           <div className="space-y-3">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">KSBJ song history</p>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Browse what KSBJ played most recently.</h1>
+              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">KSBJ recently played songs and full playlist.</h1>
               <button
                 type="button"
                 onClick={() => setTheme((current) => (current === "light" ? "dark" : "light"))}
@@ -191,8 +191,8 @@ export function SongDashboard({
                 {isDark ? "Light theme" : "Dark theme"}
               </button>
             </div>
-            <p className="max-w-2xl text-sm leading-6 text-white/85 sm:text-base">
-              Search songs and artists, browse page by page, and sort the table by the columns you care about.
+            <p className="max-w-3xl text-sm leading-6 text-white/85 sm:text-base">
+              Browse recently played songs on KSBJ, explore the most-played Christian radio tracks, search by artist or title, and open the full YouTube Music playlist.
             </p>
           </div>
           <div
@@ -230,6 +230,21 @@ export function SongDashboard({
           secondary={(song) => `${song.seenCount?.toLocaleString() ?? "—"} plays`}
         />
         <PlaylistBlock isDark={isDark} totalSongCount={totalSongCount} />
+      </section>
+
+      <section
+        className={`rounded-3xl border p-5 shadow-sm ${
+          isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"
+        }`}
+      >
+        <h2 className={`text-xl font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+          Track KSBJ recently played songs
+        </h2>
+        <p className={`mt-3 max-w-4xl text-sm leading-7 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+          This page tracks songs recently played on KSBJ and makes it easy to browse the latest rotation, find the most-played songs,
+          and jump into the full playlist. Use it to check what was on KSBJ today, discover repeat favorites, and open song links in
+          YouTube Music.
+        </p>
       </section>
 
       <section

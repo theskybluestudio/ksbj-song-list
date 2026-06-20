@@ -28,6 +28,12 @@ npm run dev
 
 Open http://localhost:3000
 
+For production SEO metadata, set:
+
+```bash
+NEXT_PUBLIC_SITE_URL=https://ksbj.skybluestudio.net
+```
+
 ## Google Sheet setup
 
 ### Option 1: easiest
@@ -45,6 +51,12 @@ Set these environment variables and the app will build the CSV export URL:
 ```bash
 KSBJ_SONGS_SHEET_ID=your_sheet_id
 KSBJ_SONGS_GID=0
+```
+
+Also set:
+
+```bash
+NEXT_PUBLIC_SITE_URL=https://ksbj.skybluestudio.net
 ```
 
 ## Expected columns
