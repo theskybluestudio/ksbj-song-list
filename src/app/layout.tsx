@@ -41,11 +41,20 @@ export const metadata: Metadata = {
     url: "/",
     type: "website",
     siteName,
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "KSBJ Song History preview image",
+      },
+    ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "KSBJ Song History | Recently Played Songs & Playlist",
     description: siteDescription,
+    images: ["/opengraph-image"],
   },
 };
 
