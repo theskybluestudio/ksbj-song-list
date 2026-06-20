@@ -16,6 +16,8 @@ type SortColumn = "title" | "artist" | "seenCount" | "playedAt";
 type SortDirection = "asc" | "desc";
 
 const FULL_PLAYLIST_URL = "https://music.youtube.com/playlist?list=PLL4Buq3mCcXM&si=2pZvH94Jq7fsxz16";
+const GITHUB_REPO_URL = "https://github.com/theskybluestudio/ksbj-song-list";
+const PAYPAL_DONATE_URL = "https://www.paypal.com/donate/?hosted_button_id=QS8KGBQ6L9RGW";
 
 function formatPlayedDate(song: SongRecord) {
   if (song.playedAt) {
@@ -232,19 +234,63 @@ export function SongDashboard({
         <PlaylistBlock isDark={isDark} totalSongCount={totalSongCount} />
       </section>
 
-      <section
-        className={`rounded-3xl border p-5 shadow-sm ${
-          isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"
-        }`}
-      >
-        <h2 className={`text-xl font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>
-          Track KSBJ recently played songs
-        </h2>
-        <p className={`mt-3 max-w-4xl text-sm leading-7 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
-          This page tracks songs recently played on KSBJ and makes it easy to browse the latest rotation, find the most-played songs,
-          and jump into the full playlist. Use it to check what was on KSBJ today, discover repeat favorites, and open song links in
-          YouTube Music.
-        </p>
+      <section className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <section
+          className={`rounded-3xl border p-5 shadow-sm ${
+            isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"
+          }`}
+        >
+          <h2 className={`text-xl font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+            Track KSBJ recently played songs
+          </h2>
+          <p className={`mt-3 max-w-4xl text-sm leading-7 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+            This page tracks songs recently played on KSBJ and makes it easy to browse the latest rotation, find the most-played songs,
+            and jump into the full playlist. Use it to check what was on KSBJ today, discover repeat favorites, and open song links in
+            YouTube Music.
+          </p>
+        </section>
+
+        <section
+          className={`rounded-3xl border p-5 shadow-sm ${
+            isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"
+          }`}
+        >
+          <h2 className={`text-xl font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>Feedback</h2>
+          <p className={`mt-3 text-sm leading-7 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+            Found a bad song link, missing track, or bug? Share feedback or report issues on GitHub.
+          </p>
+          <div className="mt-4">
+            <a
+              href={`${GITHUB_REPO_URL}/issues`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={playButtonClass(isDark)}
+            >
+              Open GitHub Issues
+            </a>
+          </div>
+
+          <div className={`mt-5 border-t pt-5 ${isDark ? "border-slate-800" : "border-slate-200"}`}>
+            <h3 className={`text-base font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>Support this project</h3>
+            <p className={`mt-3 text-sm leading-7 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+              This project was built to help KSBJ listeners quickly find recently played songs and enjoy the full playlist in one place.
+              If you find it useful, your support helps cover hosting, maintenance, and future improvements. Every contribution helps keep it going.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <a
+                href={PAYPAL_DONATE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={playButtonClass(isDark)}
+              >
+                Support with PayPal
+              </a>
+              <span className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"}`}>
+                Thank you for helping keep this project online and improving.
+              </span>
+            </div>
+          </div>
+        </section>
       </section>
 
       <section
