@@ -14,6 +14,11 @@ type RecencyOption = "all" | "24h" | "7d" | "30d";
 type ThemeMode = "light" | "dark";
 type SortColumn = "title" | "artist" | "seenCount" | "playedAt";
 type SortDirection = "asc" | "desc";
+type ChartDatum = {
+  label: string;
+  value: number;
+  subtitle?: string;
+};
 
 const FULL_PLAYLIST_URL = "https://music.youtube.com/playlist?list=PLL4Buq3mCcXM&si=2pZvH94Jq7fsxz16";
 const GITHUB_REPO_URL = "https://github.com/theskybluestudio/ksbj-song-list";
@@ -75,6 +80,62 @@ function sortSongs(songs: SongRecord[], column: SortColumn, direction: SortDirec
 
     return comparison * factor;
   });
+}
+
+function buildTopArtistsByPlayCount(songs: SongRecord[], limit = 8): ChartDatum[] {
+  const totals = new Map<string, { value: number; songs: number }>();
+
+  for (const song of songs) {
+    const current = totals.get(song.artist) ?? { value: 0, songs: 0 };
+    totals.set(song.artist, {
+      value: current.value + (song.seenCount ?? 0),
+      songs: current.songs + 1,
+    });
+  }
+
+  return [...totals.entries()]
+    .map(([label, stats]) => ({ label, value: stats.value, subtitle: `${stats.songs} songs` }))
+    .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label))
+    .slice(0, limit);
+}
+
+function buildTopArtistsByUniqueSongs(songs: SongRecord[], limit = 8): ChartDatum[] {
+  const totals = new Map<string, number>();
+
+  for (const song of songs) {
+    totals.set(song.artist, (totals.get(song.artist) ?? 0) + 1);
+  }
+
+  return [...totals.entries()]
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label))
+    .slice(0, limit);
+}
+
+function buildTopSongsByPlayCount(songs: SongRecord[], limit = 8): ChartDatum[] {
+  return [...songs]
+    .filter((song) => (song.seenCount ?? 0) > 0)
+    .sort((a, b) => (b.seenCount ?? 0) - (a.seenCount ?? 0) || a.title.localeCompare(b.title))
+    .slice(0, limit)
+    .map((song) => ({ label: song.title, value: song.seenCount ?? 0, subtitle: song.artist }));
+}
+
+function buildPlayCountDistribution(songs: SongRecord[]): ChartDatum[] {
+  const buckets = [
+    { label: "1–10", min: 1, max: 10 },
+    { label: "11–25", min: 11, max: 25 },
+    { label: "26–50", min: 26, max: 50 },
+    { label: "51–100", min: 51, max: 100 },
+    { label: "101+", min: 101, max: Number.POSITIVE_INFINITY },
+  ];
+
+  return buckets.map((bucket) => ({
+    label: bucket.label,
+    value: songs.filter((song) => {
+      const count = song.seenCount ?? 0;
+      return count >= bucket.min && count <= bucket.max;
+    }).length,
+  }));
 }
 
 export function SongDashboard({
@@ -145,6 +206,10 @@ export function SongDashboard({
   const latestSong = recentlyPlayedSongs[0];
   const totalSongCount = songs.length;
   const isDark = theme === "dark";
+  const topArtistsByPlayCount = useMemo(() => buildTopArtistsByPlayCount(songs), [songs]);
+  const topArtistsByUniqueSongs = useMemo(() => buildTopArtistsByUniqueSongs(songs), [songs]);
+  const topSongsByPlayCount = useMemo(() => buildTopSongsByPlayCount(songs), [songs]);
+  const playCountDistribution = useMemo(() => buildPlayCountDistribution(songs), [songs]);
 
   function toggleSort(column: SortColumn) {
     if (sortColumn === column) {
@@ -371,7 +436,7 @@ export function SongDashboard({
               <tr>
                 <SortableHeader label="Song" column="title" activeColumn={sortColumn} direction={sortDirection} onClick={toggleSort} align="left" />
                 <SortableHeader label="Artist" column="artist" activeColumn={sortColumn} direction={sortDirection} onClick={toggleSort} align="left" />
-                <SortableHeader label="Seen count" column="seenCount" activeColumn={sortColumn} direction={sortDirection} onClick={toggleSort} align="right" />
+                <SortableHeader label="Play count" column="seenCount" activeColumn={sortColumn} direction={sortDirection} onClick={toggleSort} align="right" />
                 <th className="px-5 py-3 text-right font-medium">Listen</th>
                 <SortableHeader label="Last played" column="playedAt" activeColumn={sortColumn} direction={sortDirection} onClick={toggleSort} align="left" />
               </tr>
@@ -462,6 +527,38 @@ export function SongDashboard({
             No songs matched that search or time filter.
           </div>
         ) : null}
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <HorizontalBarChartCard
+          title="Top artists by total play count"
+          description="Which artists dominate the overall rotation."
+          data={topArtistsByPlayCount}
+          valueSuffix="plays"
+          isDark={isDark}
+        />
+        <HorizontalBarChartCard
+          title="Top artists by unique songs"
+          description="Artists with the widest catalog presence in the list."
+          data={topArtistsByUniqueSongs}
+          valueSuffix="songs"
+          isDark={isDark}
+        />
+        <VerticalBarChartCard
+          title="Play count distribution by song"
+          description="How heavily the current song pool is concentrated by play count."
+          data={playCountDistribution}
+          isDark={isDark}
+        />
+        <section className="lg:col-span-2">
+          <HorizontalBarChartCard
+            title="Top songs by total play count"
+            description="The most repeated songs currently captured in the dataset."
+            data={topSongsByPlayCount}
+            valueSuffix="plays"
+            isDark={isDark}
+          />
+        </section>
       </section>
 
       <footer className={`pb-2 text-center text-xs leading-6 ${isDark ? "text-slate-500" : "text-slate-500"}`}>
@@ -560,6 +657,93 @@ function PlaylistBlock({
             Open the complete playlist and browse all tracked songs in one place.
           </p>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function HorizontalBarChartCard({
+  title,
+  description,
+  data,
+  valueSuffix,
+  isDark,
+}: {
+  title: string;
+  description: string;
+  data: ChartDatum[];
+  valueSuffix?: string;
+  isDark: boolean;
+}) {
+  const maxValue = Math.max(...data.map((item) => item.value), 1);
+
+  return (
+    <section className={`rounded-3xl border p-5 shadow-sm ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"}`}>
+      <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>{title}</h2>
+      <p className={`mt-2 text-sm leading-6 ${isDark ? "text-slate-400" : "text-slate-600"}`}>{description}</p>
+      <div className="mt-5 space-y-4">
+        {data.map((item) => {
+          const width = `${(item.value / maxValue) * 100}%`;
+
+          return (
+            <div key={`${title}-${item.label}`} className="space-y-1.5">
+              <div className="flex items-end justify-between gap-3">
+                <div className="min-w-0">
+                  <div className={`truncate text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{item.label}</div>
+                  {item.subtitle ? <div className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"}`}>{item.subtitle}</div> : null}
+                </div>
+                <div className={`shrink-0 text-sm font-medium ${isDark ? "text-slate-300" : "text-slate-700"}`}>
+                  {item.value.toLocaleString()}{valueSuffix ? ` ${valueSuffix}` : ""}
+                </div>
+              </div>
+              <div className={`h-2.5 overflow-hidden rounded-full ${isDark ? "bg-slate-800" : "bg-slate-100"}`}>
+                <div
+                  className={isDark ? "h-full rounded-full bg-fuchsia-400/70" : "h-full rounded-full bg-sky-500"}
+                  style={{ width }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function VerticalBarChartCard({
+  title,
+  description,
+  data,
+  isDark,
+}: {
+  title: string;
+  description: string;
+  data: ChartDatum[];
+  isDark: boolean;
+}) {
+  const maxValue = Math.max(...data.map((item) => item.value), 1);
+
+  return (
+    <section className={`rounded-3xl border p-5 shadow-sm ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"}`}>
+      <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>{title}</h2>
+      <p className={`mt-2 text-sm leading-6 ${isDark ? "text-slate-400" : "text-slate-600"}`}>{description}</p>
+      <div className="mt-5 flex h-56 items-end gap-3">
+        {data.map((item) => {
+          const height = `${(item.value / maxValue) * 100}%`;
+
+          return (
+            <div key={`${title}-${item.label}`} className="flex min-w-0 flex-1 flex-col items-center gap-2">
+              <div className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"}`}>{item.value.toLocaleString()}</div>
+              <div className={`flex h-44 w-full items-end rounded-2xl px-1.5 pb-1.5 ${isDark ? "bg-slate-950/70" : "bg-slate-50"}`}>
+                <div
+                  className={isDark ? "w-full rounded-xl bg-fuchsia-400/70" : "w-full rounded-xl bg-sky-500"}
+                  style={{ height }}
+                />
+              </div>
+              <div className={`text-center text-xs leading-5 ${isDark ? "text-slate-500" : "text-slate-500"}`}>{item.label}</div>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

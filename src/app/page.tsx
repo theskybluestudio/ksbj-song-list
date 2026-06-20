@@ -2,6 +2,8 @@ import { SongDashboard } from "@/components/song-dashboard";
 import { getSongData } from "@/lib/song-data";
 import { siteDescription, siteName, siteUrl } from "@/lib/site";
 
+export const dynamic = "force-dynamic";
+
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
