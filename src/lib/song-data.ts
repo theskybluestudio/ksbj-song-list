@@ -298,3 +298,4 @@ export async function getSongData(): Promise<SongDataResult> {
     fetchedAt: new Date().toISOString(),
   };
 }
+
