@@ -417,6 +417,10 @@ export function SongDashboard({
           </div>
         ) : null}
       </section>
+
+      <footer className={`pb-2 text-center text-xs leading-6 ${isDark ? "text-slate-500" : "text-slate-500"}`}>
+        Unofficial KSBJ song tracker. Not affiliated with or endorsed by KSBJ.
+      </footer>
     </div>
   );
 }
