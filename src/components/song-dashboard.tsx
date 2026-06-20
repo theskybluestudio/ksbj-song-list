@@ -15,6 +15,8 @@ type ThemeMode = "light" | "dark";
 type SortColumn = "title" | "artist" | "seenCount" | "playedAt";
 type SortDirection = "asc" | "desc";
 
+const FULL_PLAYLIST_URL = "https://music.youtube.com/playlist?list=PLL4Buq3mCcXM&si=2pZvH94Jq7fsxz16";
+
 function formatPlayedDate(song: SongRecord) {
   if (song.playedAt) {
     return new Intl.DateTimeFormat("en-US", {
@@ -139,6 +141,7 @@ export function SongDashboard({
   const recentlyPlayedSongs = sortSongs(songs, "playedAt", "desc").slice(0, 5);
   const mostPlayedSongs = sortSongs(songs, "seenCount", "desc").slice(0, 5);
   const latestSong = recentlyPlayedSongs[0];
+  const totalSongCount = songs.length;
   const isDark = theme === "dark";
 
   function toggleSort(column: SortColumn) {
@@ -185,7 +188,7 @@ export function SongDashboard({
                     : "border border-white/30 bg-white/15 hover:bg-white/25"
                 }`}
               >
-                {isDark ? "Normal theme" : "Dark theme"}
+                {isDark ? "Light theme" : "Dark theme"}
               </button>
             </div>
             <p className="max-w-2xl text-sm leading-6 text-white/85 sm:text-base">
@@ -197,14 +200,23 @@ export function SongDashboard({
               isDark ? "bg-zinc-900/55" : "bg-white/15"
             }`}
           >
-            <div>Source: {sourceLabel}</div>
             <div>Updated: {new Date(fetchedAt).toLocaleString()}</div>
-            {usingSampleData ? <div className="font-medium">Configure the sheet URL to go live.</div> : null}
+            <div className="mt-2">
+              <a
+                href="https://ksbj.org"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 underline decoration-white/40 underline-offset-4 transition hover:decoration-white/80"
+              >
+                Visit KSBJ.org <span aria-hidden="true">↗</span>
+              </a>
+            </div>
+            {usingSampleData ? <div className="mt-2 font-medium">Configure the sheet URL to go live.</div> : null}
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-2">
+      <section className="grid gap-4 lg:grid-cols-3">
         <TopSongsBlock
           title="Last played 5"
           songs={recentlyPlayedSongs}
@@ -217,6 +229,7 @@ export function SongDashboard({
           isDark={isDark}
           secondary={(song) => `${song.seenCount?.toLocaleString() ?? "—"} plays`}
         />
+        <PlaylistBlock isDark={isDark} totalSongCount={totalSongCount} />
       </section>
 
       <section
@@ -441,6 +454,47 @@ function TopSongsBlock({
             </div>
           );
         })}
+      </div>
+    </section>
+  );
+}
+
+function PlaylistBlock({
+  isDark,
+  totalSongCount,
+}: {
+  isDark: boolean;
+  totalSongCount: number;
+}) {
+  return (
+    <section className={`rounded-3xl border p-5 shadow-sm ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"}`}>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>Full playlist</h2>
+        <span className={`text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>{totalSongCount.toLocaleString()} songs</span>
+      </div>
+      <div
+        className={`flex flex-col gap-3 rounded-2xl px-4 pt-4 pb-3 ${
+          isDark ? "bg-slate-950/60" : "bg-slate-50"
+        }`}
+      >
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className={`text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>YouTube Music playlist</div>
+            <a
+              href={FULL_PLAYLIST_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
+                isDark ? "bg-zinc-800/70 text-slate-300 hover:bg-zinc-700/80" : "bg-white text-slate-600 hover:bg-slate-100"
+              }`}
+            >
+              music.youtube.com ↗
+            </a>
+          </div>
+          <p className={`text-sm leading-6 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+            Open the complete playlist and browse all tracked songs in one place.
+          </p>
+        </div>
       </div>
     </section>
   );
