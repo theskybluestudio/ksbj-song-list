@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { SourceNav } from "@/components/source-nav";
 import type { SongRecord } from "@/lib/song-data";
 import { DEFAULT_THEME, THEME_STORAGE_KEY, type ThemeMode } from "@/lib/theme";
 
@@ -233,6 +234,8 @@ export function SongDashboard({
         isDark ? "text-slate-100" : "text-slate-950"
       }`}
     >
+      <SourceNav isDark={isDark} currentPath="/ksbj" />
+
       <section
         className={`rounded-3xl p-8 text-white shadow-lg ${
           isDark
@@ -618,11 +621,19 @@ function PlaylistBlock({
               href={FULL_PLAYLIST_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
+              className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-medium transition ${
                 isDark ? "bg-zinc-800/70 text-slate-300 hover:bg-zinc-700/80" : "bg-white text-slate-600 hover:bg-slate-100"
               }`}
             >
-              music.youtube.com ↗
+              <span
+                aria-hidden="true"
+                className={`flex h-5 w-5 items-center justify-center rounded-full ${
+                  isDark ? "bg-rose-500/20 text-rose-300" : "bg-rose-100 text-rose-600"
+                }`}
+              >
+                ▶
+              </span>
+              <span>music.youtube.com ↗</span>
             </a>
           </div>
           <p className={`text-sm leading-6 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
