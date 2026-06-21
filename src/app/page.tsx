@@ -4,18 +4,18 @@ import { siteDescription, siteName, siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Music Sources | Sky Blue Studio Music Tracker",
-  description: "Browse music tracking dashboards by source, starting with the KSBJ master list.",
+  description: "Browse music tracking dashboards by source, including KSBJ and K-LOVE.",
   alternates: {
     canonical: "/",
   },
   openGraph: {
     title: "Music Sources | Sky Blue Studio Music Tracker",
-    description: "Browse music tracking dashboards by source, starting with the KSBJ master list.",
+    description: "Browse music tracking dashboards by source, including KSBJ and K-LOVE.",
     url: "/",
   },
   twitter: {
     title: "Music Sources | Sky Blue Studio Music Tracker",
-    description: "Browse music tracking dashboards by source, starting with the KSBJ master list.",
+    description: "Browse music tracking dashboards by source, including KSBJ and K-LOVE.",
   },
 };
 
@@ -35,6 +35,12 @@ const structuredData = {
         position: 1,
         name: "KSBJ tracker",
         url: `${siteUrl}/ksbj`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "K-LOVE tracker",
+        url: `${siteUrl}/klove`,
       },
     ],
   },

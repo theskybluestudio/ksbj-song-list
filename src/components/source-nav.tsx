@@ -3,7 +3,7 @@ import Link from "next/link";
 const SOURCES = [
   { label: "Hub", href: "/", kind: "link" as const },
   { label: "KSBJ", href: "/ksbj", kind: "link" as const },
-  { label: "Source 02", kind: "placeholder" as const },
+  { label: "K-LOVE", href: "/klove", kind: "link" as const },
   { label: "Source 03", kind: "placeholder" as const },
   { label: "Source 04", kind: "placeholder" as const },
 ];
@@ -13,7 +13,7 @@ export function SourceNav({
   currentPath,
 }: {
   isDark: boolean;
-  currentPath: "/" | "/ksbj";
+  currentPath: "/" | "/ksbj" | "/klove";
 }) {
   return (
     <nav

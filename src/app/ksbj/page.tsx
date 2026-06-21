@@ -55,7 +55,27 @@ export default async function KsbjPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <SongDashboard {...songData} />
+      <SongDashboard
+        {...songData}
+        config={{
+          currentPath: "/ksbj",
+          eyebrow: "KSBJ song history",
+          title: "KSBJ Tracker",
+          description:
+            "Track songs recently played on KSBJ, browse the latest rotation, find the most-played tracks, search by title or artist, and jump into the full YouTube Music playlist. Use it to see what was on KSBJ today, discover repeat favorites, and open song links in YouTube Music.",
+          visitUrl: "https://ksbj.org",
+          visitLabel: "Visit KSBJ.org",
+          sampleDataMessage: "Configure the sheet URL to go live.",
+          footerDisclaimer: "Unofficial KSBJ song tracker. Not affiliated with or endorsed by KSBJ.",
+          actionCard: {
+            title: "Full playlist",
+            linkUrl: "https://music.youtube.com/playlist?list=PLL4Buq3mCcXM&si=2pZvH94Jq7fsxz16",
+            linkLabel: "music.youtube.com ↗",
+            description: "Open the complete playlist and browse all tracked songs in one place.",
+            iconText: "▶",
+          },
+        }}
+      />
     </main>
   );
 }

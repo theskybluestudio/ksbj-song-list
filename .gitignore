@@ -36,6 +36,7 @@ yarn-error.log*
 
 # generated data cache
 /data/songs.json
+/data/klove-songs.json
 
 # vercel
 .vercel

@@ -8,22 +8,19 @@ const GITHUB_REPO_URL = "https://github.com/theskybluestudio/ksbj-song-list";
 const PAYPAL_DONATE_URL = "https://www.paypal.com/donate/?hosted_button_id=QS8KGBQ6L9RGW";
 
 export function HomeDashboard() {
-  const [theme, setTheme] = useState<ThemeMode>(DEFAULT_THEME);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (savedTheme === "light" || savedTheme === "dark") {
-      setTheme(savedTheme);
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    if (typeof window === "undefined") {
+      return DEFAULT_THEME;
     }
-    setMounted(true);
-  }, []);
+
+    const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return savedTheme === "light" || savedTheme === "dark" ? savedTheme : DEFAULT_THEME;
+  });
 
   useEffect(() => {
-    if (!mounted) return;
     document.documentElement.classList.toggle("dark", theme === "dark");
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [mounted, theme]);
+  }, [theme]);
 
   const isDark = theme === "dark";
 
@@ -42,8 +39,8 @@ export function HomeDashboard() {
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/70">THE SKYBLUE STUDIO</p>
               <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">Music tracker dashboards</h1>
               <p className="mt-4 max-w-3xl text-sm leading-7 text-white/85 sm:text-base">
-                This hub collects music tracking pages by source. Start with the KSBJ tracker, and expand into more stations,
-                playlists, or source-specific dashboards over time.
+                This hub collects music tracking pages by source. Browse the KSBJ and K-LOVE trackers now, and expand into
+                more stations, playlists, or source-specific dashboards over time.
               </p>
             </div>
             <button
@@ -83,6 +80,29 @@ export function HomeDashboard() {
               Open dashboard <span aria-hidden="true">→</span>
             </div>
           </Link>
+
+          <Link
+            href="/klove"
+            className={`rounded-3xl border p-6 shadow-sm transition ${
+              isDark
+                ? "border-slate-800 bg-slate-900 hover:border-sky-500/40 hover:bg-slate-900/90"
+                : "border-slate-200 bg-white hover:border-sky-500/40 hover:bg-slate-50"
+            }`}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className={`text-sm font-semibold uppercase tracking-[0.18em] ${isDark ? "text-sky-300/80" : "text-sky-700"}`}>Source 02</div>
+                <h2 className={`mt-3 text-2xl font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>K-LOVE tracker</h2>
+              </div>
+              <span className={`rounded-full border px-3 py-1 text-xs ${isDark ? "border-slate-700 bg-slate-950 text-slate-300" : "border-slate-200 bg-slate-50 text-slate-700"}`}>Live</span>
+            </div>
+            <p className={`mt-4 text-sm leading-7 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+              Browse observed recently played songs on K-LOVE, search the captured rotation, and jump to the official songs page.
+            </p>
+            <div className={`mt-6 inline-flex items-center gap-2 text-sm font-medium ${isDark ? "text-sky-300" : "text-sky-700"}`}>
+              Open dashboard <span aria-hidden="true">→</span>
+            </div>
+          </Link>
         </section>
 
         <section
@@ -108,8 +128,8 @@ export function HomeDashboard() {
           <div className={`mt-5 border-t pt-5 ${isDark ? "border-slate-800" : "border-slate-200"}`}>
             <h3 className={`text-base font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>Support this project</h3>
             <p className={`mt-3 text-sm leading-7 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
-              This project was built to help KSBJ listeners quickly find recently played songs and enjoy the full playlist in one place.
-              If you find it useful, your support helps cover hosting, maintenance, and future improvements. Every contribution helps keep it going.
+              This project helps listeners quickly find recently played songs across multiple stations in one place.
+              If you find it useful, your support helps cover hosting, maintenance, and future dashboard additions. Every contribution helps keep it growing.
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <a

@@ -47,7 +47,7 @@ export default function OpenGraphImage() {
                 color: "rgba(255,255,255,0.78)",
               }}
             >
-              KSBJ Song History
+              SKY BLUE STUDIO MUSIC TRACKER
             </div>
             <div
               style={{
@@ -57,7 +57,7 @@ export default function OpenGraphImage() {
                 maxWidth: 900,
               }}
             >
-              Recently played songs and full playlist
+              Track KSBJ and K-LOVE songs in one place
             </div>
             <div
               style={{
@@ -67,7 +67,7 @@ export default function OpenGraphImage() {
                 maxWidth: 860,
               }}
             >
-              Search the latest KSBJ songs, browse the most-played tracks, and open the YouTube Music playlist.
+              Browse source dashboards, search observed rotations, and open official song pages and playlists.
             </div>
           </div>
 
@@ -103,7 +103,7 @@ export default function OpenGraphImage() {
                 color: "rgba(255,255,255,0.85)",
               }}
             >
-              KSBJ.org ↗
+              KSBJ + K-LOVE
             </div>
           </div>
         </div>

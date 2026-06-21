@@ -10,6 +10,23 @@ type SongDashboardProps = {
   sourceLabel: string;
   usingSampleData: boolean;
   fetchedAt: string;
+  config: {
+    currentPath: "/ksbj" | "/klove";
+    eyebrow: string;
+    title: string;
+    description: string;
+    visitUrl: string;
+    visitLabel: string;
+    sampleDataMessage: string;
+    footerDisclaimer: string;
+    actionCard: {
+      title: string;
+      linkUrl: string;
+      linkLabel: string;
+      description: string;
+      iconText?: string;
+    };
+  };
 };
 
 type RecencyOption = "all" | "24h" | "7d" | "30d";
@@ -21,9 +38,6 @@ type ChartDatum = {
   subtitle?: string;
 };
 
-const FULL_PLAYLIST_URL = "https://music.youtube.com/playlist?list=PLL4Buq3mCcXM&si=2pZvH94Jq7fsxz16";
-const GITHUB_REPO_URL = "https://github.com/theskybluestudio/ksbj-song-list";
-const PAYPAL_DONATE_URL = "https://www.paypal.com/donate/?hosted_button_id=QS8KGBQ6L9RGW";
 
 function formatPlayedDate(song: SongRecord) {
   if (song.playedAt) {
@@ -123,36 +137,29 @@ function buildTopSongsByPlayCount(songs: SongRecord[], limit = 8): ChartDatum[] 
 
 export function SongDashboard({
   songs,
-  sourceLabel,
   usingSampleData,
   fetchedAt,
+  config,
 }: SongDashboardProps) {
   const [query, setQuery] = useState("");
   const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
   const [recency, setRecency] = useState<RecencyOption>("all");
-  const [theme, setTheme] = useState<ThemeMode>(DEFAULT_THEME);
-  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<ThemeMode>(() => {
+    if (typeof window === "undefined") {
+      return DEFAULT_THEME;
+    }
+
+    const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return savedTheme === "light" || savedTheme === "dark" ? savedTheme : DEFAULT_THEME;
+  });
   const [sortColumn, setSortColumn] = useState<SortColumn>("playedAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (savedTheme === "light" || savedTheme === "dark") {
-      setTheme(savedTheme);
-    }
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
     document.documentElement.classList.toggle("dark", theme === "dark");
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [mounted, theme]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [query, recency, pageSize, sortColumn, sortDirection]);
+  }, [theme]);
 
   const filteredSongs = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -195,11 +202,13 @@ export function SongDashboard({
   function toggleSort(column: SortColumn) {
     if (sortColumn === column) {
       setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
+      setPage(1);
       return;
     }
 
     setSortColumn(column);
     setSortDirection(column === "seenCount" || column === "playedAt" ? "desc" : "asc");
+    setPage(1);
   }
 
   const visiblePageNumbers = useMemo(() => {
@@ -215,7 +224,7 @@ export function SongDashboard({
         isDark ? "text-slate-100" : "text-slate-950"
       }`}
     >
-      <SourceNav isDark={isDark} currentPath="/ksbj" />
+      <SourceNav isDark={isDark} currentPath={config.currentPath} />
 
       <section
         className={`rounded-3xl p-8 text-white shadow-lg ${
@@ -227,8 +236,8 @@ export function SongDashboard({
         <div className="space-y-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="space-y-3">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">KSBJ song history</p>
-              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">KSBJ Tracker</h1>
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">{config.eyebrow}</p>
+              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">{config.title}</h1>
             </div>
               <button
                 type="button"
@@ -242,22 +251,19 @@ export function SongDashboard({
                 {isDark ? "Light theme" : "Dark theme"}
               </button>
           </div>
-          <p className="text-sm leading-7 text-white/85 sm:text-base">
-            Track songs recently played on KSBJ, browse the latest rotation, find the most-played tracks, search by title or artist,
-            and jump into the full YouTube Music playlist. Use it to see what was on KSBJ today, discover repeat favorites, and open song links in YouTube Music.
-          </p>
+          <p className="text-sm leading-7 text-white/85 sm:text-base">{config.description}</p>
           <div className="flex flex-col gap-2 text-sm text-white/80 sm:flex-row sm:items-center sm:justify-between">
             <div>Updated: {new Intl.DateTimeFormat("en-US", { year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(fetchedAt))}</div>
             <a
-              href="https://ksbj.org"
+              href={config.visitUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 self-start underline decoration-white/40 underline-offset-4 transition hover:decoration-white/80 sm:self-auto"
             >
-              Visit KSBJ.org <span aria-hidden="true">↗</span>
+              {config.visitLabel} <span aria-hidden="true">↗</span>
             </a>
           </div>
-          {usingSampleData ? <div className="text-sm font-medium text-white/85">Configure the sheet URL to go live.</div> : null}
+          {usingSampleData ? <div className="text-sm font-medium text-white/85">{config.sampleDataMessage}</div> : null}
         </div>
       </section>
 
@@ -274,51 +280,7 @@ export function SongDashboard({
           isDark={isDark}
           secondary={(song) => `${song.seenCount?.toLocaleString() ?? "—"} plays`}
         />
-        <PlaylistBlock isDark={isDark} totalSongCount={totalSongCount} />
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-3">
-        <section
-          className={`rounded-3xl border p-5 shadow-sm lg:col-span-3 ${
-            isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"
-          }`}
-        >
-          <h2 className={`text-xl font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>Feedback</h2>
-          <p className={`mt-3 text-sm leading-7 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
-            Found a bad song link, missing track, or bug? Share feedback or report issues on GitHub.
-          </p>
-          <div className="mt-4">
-            <a
-              href={`${GITHUB_REPO_URL}/issues`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={playButtonClass(isDark)}
-            >
-              Open GitHub Issues
-            </a>
-          </div>
-
-          <div className={`mt-5 border-t pt-5 ${isDark ? "border-slate-800" : "border-slate-200"}`}>
-            <h3 className={`text-base font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>Support this project</h3>
-            <p className={`mt-3 text-sm leading-7 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
-              This project was built to help KSBJ listeners quickly find recently played songs and enjoy the full playlist in one place.
-              If you find it useful, your support helps cover hosting, maintenance, and future improvements. Every contribution helps keep it going.
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <a
-                href={PAYPAL_DONATE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={playButtonClass(isDark)}
-              >
-                Support with PayPal
-              </a>
-              <span className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"}`}>
-                Thank you for helping keep this project online and improving.
-              </span>
-            </div>
-          </div>
-        </section>
+        <ActionBlock isDark={isDark} totalSongCount={totalSongCount} config={config.actionCard} />
       </section>
 
       <section
@@ -333,7 +295,10 @@ export function SongDashboard({
           <input
             id="song-query"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPage(1);
+            }}
             placeholder="MercyMe, Goodness of God, CeCe Winans…"
             className={`w-full rounded-2xl border px-4 py-3 text-sm outline-none ring-0 transition ${
               isDark
@@ -347,7 +312,10 @@ export function SongDashboard({
           id="song-recency"
           label="Last played within"
           value={recency}
-          onChange={(value) => setRecency(value as RecencyOption)}
+          onChange={(value) => {
+            setRecency(value as RecencyOption);
+            setPage(1);
+          }}
           isDark={isDark}
           options={[
             ["all", "All time"],
@@ -361,7 +329,10 @@ export function SongDashboard({
           id="song-page-size"
           label="Rows per page"
           value={String(pageSize)}
-          onChange={(value) => setPageSize(Number(value))}
+          onChange={(value) => {
+            setPageSize(Number(value));
+            setPage(1);
+          }}
           isDark={isDark}
           options={[
             ["10", "10"],
@@ -512,7 +483,7 @@ export function SongDashboard({
       </section>
 
       <footer className={`pb-2 text-center text-xs leading-6 ${isDark ? "text-slate-500" : "text-slate-500"}`}>
-        Unofficial KSBJ song tracker. Not affiliated with or endorsed by KSBJ.
+        {config.footerDisclaimer}
       </footer>
     </div>
   );
@@ -530,7 +501,7 @@ function TopSongsBlock({
   secondary: (song: SongRecord) => string;
 }) {
   return (
-    <section className={`rounded-3xl border p-5 shadow-sm ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"}`}>
+    <section className={`min-w-0 rounded-3xl border p-5 shadow-sm ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"}`}>
       <div className="mb-4 flex items-center justify-between">
         <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>{title}</h2>
         <span className={`text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>{songs.length} songs</span>
@@ -540,7 +511,7 @@ function TopSongsBlock({
           const songLink = getSongLink(song);
 
           return (
-            <div key={`${title}-${song.id}`} className={`flex items-start justify-between gap-3 rounded-2xl px-3 py-2 ${isDark ? "bg-slate-950/60" : "bg-slate-50"}`}>
+            <div key={`${title}-${song.id}`} className={`flex flex-col gap-3 rounded-2xl px-3 py-2 sm:flex-row sm:items-start sm:justify-between ${isDark ? "bg-slate-950/60" : "bg-slate-50"}`}>
               <div className="flex min-w-0 items-start gap-3">
                 <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${isDark ? "bg-slate-800 text-slate-200" : "bg-slate-200 text-slate-700"}`}>
                   {index + 1}
@@ -550,8 +521,8 @@ function TopSongsBlock({
                   <div className={`truncate text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>{song.artist}</div>
                 </div>
               </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <div className={`text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>{secondary(song)}</div>
+              <div className="flex min-w-0 items-center justify-between gap-3 sm:shrink-0 sm:justify-start">
+                <div className={`min-w-0 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>{secondary(song)}</div>
                 {songLink ? (
                   <a
                     href={songLink}
@@ -571,17 +542,19 @@ function TopSongsBlock({
   );
 }
 
-function PlaylistBlock({
+function ActionBlock({
   isDark,
   totalSongCount,
+  config,
 }: {
   isDark: boolean;
   totalSongCount: number;
+  config: SongDashboardProps["config"]["actionCard"];
 }) {
   return (
-    <section className={`rounded-3xl border p-5 shadow-sm ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"}`}>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>Full playlist</h2>
+    <section className={`min-w-0 rounded-3xl border p-5 shadow-sm ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"}`}>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>{config.title}</h2>
         <span className={`text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>{totalSongCount.toLocaleString()} songs</span>
       </div>
       <div
@@ -590,10 +563,10 @@ function PlaylistBlock({
         }`}
       >
         <div className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <div className={`text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>YouTube Music playlist</div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className={`text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{config.title}</div>
             <a
-              href={FULL_PLAYLIST_URL}
+              href={config.linkUrl}
               target="_blank"
               rel="noopener noreferrer"
               className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-medium transition ${
@@ -606,14 +579,12 @@ function PlaylistBlock({
                   isDark ? "bg-rose-500/20 text-rose-300" : "bg-rose-100 text-rose-600"
                 }`}
               >
-                ▶
+                {config.iconText ?? "↗"}
               </span>
-              <span>music.youtube.com ↗</span>
+              <span className="break-all sm:break-normal">{config.linkLabel}</span>
             </a>
           </div>
-          <p className={`text-sm leading-6 ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-            Open the complete playlist and browse all tracked songs in one place.
-          </p>
+          <p className={`text-sm leading-6 ${isDark ? "text-slate-400" : "text-slate-600"}`}>{config.description}</p>
         </div>
       </div>
     </section>
