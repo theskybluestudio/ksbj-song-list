@@ -121,24 +121,6 @@ function buildTopSongsByPlayCount(songs: SongRecord[], limit = 8): ChartDatum[] 
     .map((song) => ({ label: song.title, value: song.seenCount ?? 0, subtitle: song.artist }));
 }
 
-function buildPlayCountDistribution(songs: SongRecord[]): ChartDatum[] {
-  const buckets = [
-    { label: "1–10", min: 1, max: 10 },
-    { label: "11–25", min: 11, max: 25 },
-    { label: "26–50", min: 26, max: 50 },
-    { label: "51–100", min: 51, max: 100 },
-    { label: "101+", min: 101, max: Number.POSITIVE_INFINITY },
-  ];
-
-  return buckets.map((bucket) => ({
-    label: bucket.label,
-    value: songs.filter((song) => {
-      const count = song.seenCount ?? 0;
-      return count >= bucket.min && count <= bucket.max;
-    }).length,
-  }));
-}
-
 export function SongDashboard({
   songs,
   sourceLabel,
@@ -209,7 +191,6 @@ export function SongDashboard({
   const topArtistsByPlayCount = useMemo(() => buildTopArtistsByPlayCount(songs), [songs]);
   const topArtistsByUniqueSongs = useMemo(() => buildTopArtistsByUniqueSongs(songs), [songs]);
   const topSongsByPlayCount = useMemo(() => buildTopSongsByPlayCount(songs), [songs]);
-  const playCountDistribution = useMemo(() => buildPlayCountDistribution(songs), [songs]);
 
   function toggleSort(column: SortColumn) {
     if (sortColumn === column) {
@@ -519,12 +500,6 @@ export function SongDashboard({
           valueSuffix="songs"
           isDark={isDark}
         />
-        <VerticalBarChartCard
-          title="Play count distribution by song"
-          description="How heavily the current song pool is concentrated by play count."
-          data={playCountDistribution}
-          isDark={isDark}
-        />
         <section className="lg:col-span-2">
           <HorizontalBarChartCard
             title="Top songs by total play count"
@@ -685,45 +660,6 @@ function HorizontalBarChartCard({
                   style={{ width }}
                 />
               </div>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
-}
-
-function VerticalBarChartCard({
-  title,
-  description,
-  data,
-  isDark,
-}: {
-  title: string;
-  description: string;
-  data: ChartDatum[];
-  isDark: boolean;
-}) {
-  const maxValue = Math.max(...data.map((item) => item.value), 1);
-
-  return (
-    <section className={`rounded-3xl border p-5 shadow-sm ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"}`}>
-      <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>{title}</h2>
-      <p className={`mt-2 text-sm leading-6 ${isDark ? "text-slate-400" : "text-slate-600"}`}>{description}</p>
-      <div className="mt-5 flex h-56 items-end gap-3">
-        {data.map((item) => {
-          const height = `${(item.value / maxValue) * 100}%`;
-
-          return (
-            <div key={`${title}-${item.label}`} className="flex min-w-0 flex-1 flex-col items-center gap-2">
-              <div className={`text-xs ${isDark ? "text-slate-400" : "text-slate-600"}`}>{item.value.toLocaleString()}</div>
-              <div className={`flex h-44 w-full items-end rounded-2xl px-1.5 pb-1.5 ${isDark ? "bg-slate-950/70" : "bg-slate-50"}`}>
-                <div
-                  className={isDark ? "w-full rounded-xl bg-fuchsia-400/70" : "w-full rounded-xl bg-sky-500"}
-                  style={{ height }}
-                />
-              </div>
-              <div className={`text-center text-xs leading-5 ${isDark ? "text-slate-500" : "text-slate-500"}`}>{item.label}</div>
             </div>
           );
         })}
