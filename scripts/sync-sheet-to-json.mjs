@@ -8,6 +8,7 @@ const execFileAsync = promisify(execFile);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const appRoot = path.resolve(__dirname, "..");
+const projectRoot = path.resolve(appRoot, "..");
 
 function parseEnvFile(content) {
   const env = {};
@@ -249,12 +250,18 @@ async function main() {
     fetchedAt: new Date().toISOString(),
   };
 
-  const dataDir = path.join(appRoot, "data");
-  const outPath = path.join(dataDir, "songs.json");
-  await mkdir(dataDir, { recursive: true });
-  await writeFile(outPath, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
+  const content = `${JSON.stringify(payload, null, 2)}\n`;
+  const cacheTargets = [
+    path.join(projectRoot, "sources", "ksbj", "data", "app-songs.json"),
+    path.join(appRoot, "data", "songs.json"),
+  ];
 
-  console.log(`Wrote ${songs.length} songs to ${outPath}`);
+  for (const outPath of cacheTargets) {
+    await mkdir(path.dirname(outPath), { recursive: true });
+    await writeFile(outPath, content, "utf8");
+  }
+
+  console.log(`Wrote ${songs.length} songs to ${cacheTargets.join(", ")}`);
 }
 
 main().catch((error) => {

@@ -1,6 +1,6 @@
-# KSBJ Song History App
+# Radio Song Tracker App
 
-A Next.js app for browsing songs played on KSBJ, backed by a Google Sheet.
+A shared Next.js app for browsing songs played on KSBJ and K-LOVE.
 
 ## Stack
 
@@ -71,18 +71,18 @@ The loader is flexible. It looks for common column names such as:
 
 If your sheet uses separate `date` and `time` columns, that works too.
 
-## Current MVP features
+## Current features
 
 - most recently played song list
 - search by title or artist
 - sort and recency filters
 - basic stats
-- JSON cache support via `application/data/songs.json`
-- sample fallback data when the sheet is not configured yet
+- JSON cache support via `sources/ksbj/data/app-songs.json`, `sources/klove/data/app-songs.json`, and `application/data/*.json`
+- sample fallback data when a source cache is not available yet
 
 ## JSON sync flow
 
-The app prefers `application/data/songs.json` when it exists.
+The app prefers the source-owned cache files under `sources/<station>/data/` and falls back to `application/data/*.json`.
 
 Generate or refresh it with:
 
@@ -93,7 +93,7 @@ npm run sync
 That script:
 - fetches the Google Sheet CSV
 - normalizes rows into song objects
-- writes `data/songs.json`
+- writes both `sources/ksbj/data/app-songs.json` and `application/data/songs.json`
 
 This makes page loads less dependent on Google Sheets latency.
 

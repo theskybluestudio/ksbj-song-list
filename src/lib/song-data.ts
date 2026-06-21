@@ -237,18 +237,24 @@ export function buildSongData(rows: Record<string, string>[], sourceLabel: strin
 }
 
 async function readCachedSongData(): Promise<SongDataResult | null> {
-  const cachePath = path.join(process.cwd(), "data", "songs.json");
+  const cachePaths = [
+    path.join(/*turbopackIgnore: true*/ process.cwd(), "..", "sources", "ksbj", "data", "app-songs.json"),
+    path.join(process.cwd(), "data", "songs.json"),
+  ];
 
-  try {
-    const content = await readFile(cachePath, "utf8");
-    const parsed = JSON.parse(content) as SongDataResult;
-    if (!Array.isArray(parsed.songs)) {
-      return null;
+  for (const cachePath of cachePaths) {
+    try {
+      const content = await readFile(cachePath, "utf8");
+      const parsed = JSON.parse(content) as SongDataResult;
+      if (Array.isArray(parsed.songs)) {
+        return parsed;
+      }
+    } catch {
+      // try the next cache path
     }
-    return parsed;
-  } catch {
-    return null;
   }
+
+  return null;
 }
 
 async function fetchSongDataFromSheet(): Promise<SongDataResult | null> {

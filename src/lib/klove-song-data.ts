@@ -28,16 +28,21 @@ const SAMPLE_SONGS: SongDataResult["songs"] = [
 ];
 
 export async function getKloveSongData(): Promise<SongDataResult> {
-  const cachePath = path.join(process.cwd(), "data", "klove-songs.json");
+  const cachePaths = [
+    path.join(/*turbopackIgnore: true*/ process.cwd(), "..", "sources", "klove", "data", "app-songs.json"),
+    path.join(process.cwd(), "data", "klove-songs.json"),
+  ];
 
-  try {
-    const content = await readFile(cachePath, "utf8");
-    const parsed = JSON.parse(content) as SongDataResult;
-    if (Array.isArray(parsed.songs)) {
-      return parsed;
+  for (const cachePath of cachePaths) {
+    try {
+      const content = await readFile(cachePath, "utf8");
+      const parsed = JSON.parse(content) as SongDataResult;
+      if (Array.isArray(parsed.songs)) {
+        return parsed;
+      }
+    } catch {
+      // try the next cache path
     }
-  } catch {
-    // fall through to sample data
   }
 
   return {
