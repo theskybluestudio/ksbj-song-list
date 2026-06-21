@@ -6,20 +6,20 @@ import { siteUrl } from "@/lib/site";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "KSBJ Song History | Recently Played Songs & Playlist",
+  title: "KSBJ Tracker | Sky Blue Studio Music Tracker",
   description:
     "Browse recently played songs on KSBJ, explore the most-played tracks, and open the full YouTube Music playlist.",
   alternates: {
     canonical: "/ksbj",
   },
   openGraph: {
-    title: "KSBJ Song History | Recently Played Songs & Playlist",
+    title: "KSBJ Tracker | Sky Blue Studio Music Tracker",
     description:
       "Browse recently played songs on KSBJ, explore the most-played tracks, and open the full YouTube Music playlist.",
     url: "/ksbj",
   },
   twitter: {
-    title: "KSBJ Song History | Recently Played Songs & Playlist",
+    title: "KSBJ Tracker | Sky Blue Studio Music Tracker",
     description:
       "Browse recently played songs on KSBJ, explore the most-played tracks, and open the full YouTube Music playlist.",
   },
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
-  name: "KSBJ Song History",
+  name: "KSBJ Tracker",
   description:
     "Browse recently played songs on KSBJ, explore the most-played tracks, and open the full YouTube Music playlist.",
   url: `${siteUrl}/ksbj`,

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { SongRecord } from "@/lib/song-data";
+import { DEFAULT_THEME, THEME_STORAGE_KEY, type ThemeMode } from "@/lib/theme";
 
 type SongDashboardProps = {
   songs: SongRecord[];
@@ -11,7 +12,6 @@ type SongDashboardProps = {
 };
 
 type RecencyOption = "all" | "24h" | "7d" | "30d";
-type ThemeMode = "light" | "dark";
 type SortColumn = "title" | "artist" | "seenCount" | "playedAt";
 type SortDirection = "asc" | "desc";
 type ChartDatum = {
@@ -148,13 +148,13 @@ export function SongDashboard({
   const [pageSize, setPageSize] = useState(25);
   const [page, setPage] = useState(1);
   const [recency, setRecency] = useState<RecencyOption>("all");
-  const [theme, setTheme] = useState<ThemeMode>("light");
+  const [theme, setTheme] = useState<ThemeMode>(DEFAULT_THEME);
   const [mounted, setMounted] = useState(false);
   const [sortColumn, setSortColumn] = useState<SortColumn>("playedAt");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem("ksbj-theme");
+    const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
     if (savedTheme === "light" || savedTheme === "dark") {
       setTheme(savedTheme);
     }
@@ -164,7 +164,7 @@ export function SongDashboard({
   useEffect(() => {
     if (!mounted) return;
     document.documentElement.classList.toggle("dark", theme === "dark");
-    window.localStorage.setItem("ksbj-theme", theme);
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [mounted, theme]);
 
   useEffect(() => {
@@ -241,11 +241,12 @@ export function SongDashboard({
             : "bg-linear-to-br from-sky-600 via-cyan-600 to-emerald-500 shadow-sky-950/20"
         }`}
       >
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-3">
+        <div className="space-y-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="space-y-3">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-white/80">KSBJ song history</p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">KSBJ recently played songs and full playlist.</h1>
+              <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">KSBJ Tracker</h1>
+            </div>
               <button
                 type="button"
                 onClick={() => setTheme((current) => (current === "light" ? "dark" : "light"))}
@@ -257,29 +258,23 @@ export function SongDashboard({
               >
                 {isDark ? "Light theme" : "Dark theme"}
               </button>
-            </div>
-            <p className="max-w-3xl text-sm leading-6 text-white/85 sm:text-base">
-              Browse recently played songs on KSBJ, explore the most-played Christian radio tracks, search by artist or title, and open the full YouTube Music playlist.
-            </p>
           </div>
-          <div
-            className={`rounded-2xl px-4 py-3 text-sm backdrop-blur ${
-              isDark ? "bg-zinc-900/55" : "bg-white/15"
-            }`}
-          >
+          <p className="text-sm leading-7 text-white/85 sm:text-base">
+            Track songs recently played on KSBJ, browse the latest rotation, find the most-played tracks, search by title or artist,
+            and jump into the full YouTube Music playlist. Use it to see what was on KSBJ today, discover repeat favorites, and open song links in YouTube Music.
+          </p>
+          <div className="flex flex-col gap-2 text-sm text-white/80 sm:flex-row sm:items-center sm:justify-between">
             <div>Updated: {new Date(fetchedAt).toLocaleString()}</div>
-            <div className="mt-2">
-              <a
-                href="https://ksbj.org"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 underline decoration-white/40 underline-offset-4 transition hover:decoration-white/80"
-              >
-                Visit KSBJ.org <span aria-hidden="true">↗</span>
-              </a>
-            </div>
-            {usingSampleData ? <div className="mt-2 font-medium">Configure the sheet URL to go live.</div> : null}
+            <a
+              href="https://ksbj.org"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 self-start underline decoration-white/40 underline-offset-4 transition hover:decoration-white/80 sm:self-auto"
+            >
+              Visit KSBJ.org <span aria-hidden="true">↗</span>
+            </a>
           </div>
+          {usingSampleData ? <div className="text-sm font-medium text-white/85">Configure the sheet URL to go live.</div> : null}
         </div>
       </section>
 
@@ -299,24 +294,9 @@ export function SongDashboard({
         <PlaylistBlock isDark={isDark} totalSongCount={totalSongCount} />
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <section className="grid gap-4 lg:grid-cols-3">
         <section
-          className={`rounded-3xl border p-5 shadow-sm ${
-            isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"
-          }`}
-        >
-          <h2 className={`text-xl font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>
-            Track KSBJ recently played songs
-          </h2>
-          <p className={`mt-3 max-w-4xl text-sm leading-7 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
-            This page tracks songs recently played on KSBJ and makes it easy to browse the latest rotation, find the most-played songs,
-            and jump into the full playlist. Use it to check what was on KSBJ today, discover repeat favorites, and open song links in
-            YouTube Music.
-          </p>
-        </section>
-
-        <section
-          className={`rounded-3xl border p-5 shadow-sm ${
+          className={`rounded-3xl border p-5 shadow-sm lg:col-span-3 ${
             isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"
           }`}
         >
