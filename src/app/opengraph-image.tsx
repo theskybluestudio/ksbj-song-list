@@ -90,7 +90,7 @@ export default function OpenGraphImage() {
                   background: "#38bdf8",
                 }}
               />
-              ksbj.skybluestudio.net
+              music.skybluestudio.net
             </div>
             <div
               style={{

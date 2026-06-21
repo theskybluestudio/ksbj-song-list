@@ -31,7 +31,7 @@ Open http://localhost:3000
 For production SEO metadata, set:
 
 ```bash
-NEXT_PUBLIC_SITE_URL=https://ksbj.skybluestudio.net
+NEXT_PUBLIC_SITE_URL=https://music.skybluestudio.net
 ```
 
 ## Google Sheet setup
@@ -56,7 +56,7 @@ KSBJ_SONGS_GID=0
 Also set:
 
 ```bash
-NEXT_PUBLIC_SITE_URL=https://ksbj.skybluestudio.net
+NEXT_PUBLIC_SITE_URL=https://music.skybluestudio.net
 ```
 
 ## Expected columns

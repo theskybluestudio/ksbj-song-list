@@ -51,6 +51,55 @@ function normalizeKey(value) {
   return value.trim().toLowerCase().replace(/[_-]+/g, " ");
 }
 
+function splitCsvLine(line) {
+  const cells = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    const next = line[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        current += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === "," && !inQuotes) {
+      cells.push(current);
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  cells.push(current);
+  return cells.map((cell) => cell.replace(/\r/g, "").trim());
+}
+
+function parseCsv(text) {
+  const lines = text
+    .split(/\n/)
+    .map((line) => line.trimEnd())
+    .filter((line) => line.length > 0);
+
+  if (lines.length < 2) {
+    return [];
+  }
+
+  const headers = splitCsvLine(lines[0]);
+  return lines.slice(1).map((line) => {
+    const values = splitCsvLine(line);
+    return Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ""]));
+  });
+}
+
 const TITLE_KEYS = ["title", "song", "song title", "track", "name"];
 const ARTIST_KEYS = ["artist", "artists", "singer", "band"];
 const PLAYED_AT_KEYS = ["played_at", "played at", "timestamp", "datetime", "date time", "last seen"];
@@ -115,9 +164,13 @@ function mapRowToSong(row, index) {
 function getSheetId() {
   const sheetId = process.env.KSBJ_SONGS_SHEET_ID?.trim();
   if (!sheetId) {
-    throw new Error("Missing KSBJ_SONGS_SHEET_ID in .env.local");
+    throw new Error("Missing KSBJ_SONGS_SHEET_ID or KSBJ_SONGS_CSV_URL in .env.local");
   }
   return sheetId;
+}
+
+function getCsvUrl() {
+  return process.env.KSBJ_SONGS_CSV_URL?.trim() || null;
 }
 
 async function gogJson(args) {
@@ -136,31 +189,62 @@ function rowsFromValues(values) {
   );
 }
 
-async function main() {
-  await loadLocalEnv();
-  const sheetId = getSheetId();
-  const metadata = await gogJson(["sheets", "metadata", sheetId]);
-  const firstSheetTitle = metadata?.sheets?.[0]?.properties?.title;
+function sortSongs(records) {
+  return records.sort((a, b) => {
+    if (!a.playedAt && !b.playedAt) return (b.seenCount ?? 0) - (a.seenCount ?? 0);
+    if (!a.playedAt) return 1;
+    if (!b.playedAt) return -1;
+    return a.playedAt < b.playedAt ? 1 : -1;
+  });
+}
 
-  if (!firstSheetTitle) {
-    throw new Error("Could not determine the first sheet tab title");
+async function fetchRowsFromCsvUrl(csvUrl) {
+  const response = await fetch(csvUrl, {
+    headers: {
+      "User-Agent": "ksbj-song-list/1.0",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`CSV request failed: ${response.status}`);
   }
 
-  const valuesResponse = await gogJson(["sheets", "get", sheetId, `${firstSheetTitle}!A:Z`]);
-  const rows = rowsFromValues(valuesResponse.values);
-  const songs = rows
-    .map((row, index) => mapRowToSong(row, index))
-    .filter(Boolean)
-    .sort((a, b) => {
-      if (!a.playedAt && !b.playedAt) return (b.seenCount ?? 0) - (a.seenCount ?? 0);
-      if (!a.playedAt) return 1;
-      if (!b.playedAt) return -1;
-      return a.playedAt < b.playedAt ? 1 : -1;
-    });
+  const csvText = await response.text();
+  if (/<!doctype html|<html/i.test(csvText)) {
+    throw new Error("CSV export returned HTML instead of CSV");
+  }
+
+  return parseCsv(csvText);
+}
+
+async function main() {
+  await loadLocalEnv();
+  const csvUrl = getCsvUrl();
+  let rows;
+  let sourceLabel;
+
+  if (csvUrl) {
+    rows = await fetchRowsFromCsvUrl(csvUrl);
+    sourceLabel = "Published Google Sheet CSV";
+  } else {
+    const sheetId = getSheetId();
+    const metadata = await gogJson(["sheets", "metadata", sheetId]);
+    const firstSheetTitle = metadata?.sheets?.[0]?.properties?.title;
+
+    if (!firstSheetTitle) {
+      throw new Error("Could not determine the first sheet tab title");
+    }
+
+    const valuesResponse = await gogJson(["sheets", "get", sheetId, `${firstSheetTitle}!A:Z`]);
+    rows = rowsFromValues(valuesResponse.values);
+    sourceLabel = `Google Sheets cache (${firstSheetTitle})`;
+  }
+
+  const songs = sortSongs(rows.map((row, index) => mapRowToSong(row, index)).filter(Boolean));
 
   const payload = {
     songs,
-    sourceLabel: `Google Sheets cache (${firstSheetTitle})`,
+    sourceLabel,
     usingSampleData: false,
     fetchedAt: new Date().toISOString(),
   };
