@@ -145,7 +145,7 @@ export function SongDashboard({
   fetchedAt,
 }: SongDashboardProps) {
   const [query, setQuery] = useState("");
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(10);
   const [page, setPage] = useState(1);
   const [recency, setRecency] = useState<RecencyOption>("all");
   const [theme, setTheme] = useState<ThemeMode>(DEFAULT_THEME);
@@ -203,7 +203,6 @@ export function SongDashboard({
   const pagedSongs = filteredSongs.slice(pageStart, pageStart + pageSize);
   const recentlyPlayedSongs = sortSongs(songs, "playedAt", "desc").slice(0, 5);
   const mostPlayedSongs = sortSongs(songs, "seenCount", "desc").slice(0, 5);
-  const latestSong = recentlyPlayedSongs[0];
   const totalSongCount = songs.length;
   const isDark = theme === "dark";
   const topArtistsByPlayCount = useMemo(() => buildTopArtistsByPlayCount(songs), [songs]);
@@ -264,7 +263,7 @@ export function SongDashboard({
             and jump into the full YouTube Music playlist. Use it to see what was on KSBJ today, discover repeat favorites, and open song links in YouTube Music.
           </p>
           <div className="flex flex-col gap-2 text-sm text-white/80 sm:flex-row sm:items-center sm:justify-between">
-            <div>Updated: {new Date(fetchedAt).toLocaleString()}</div>
+            <div>Updated: {new Intl.DateTimeFormat("en-US", { year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(fetchedAt))}</div>
             <a
               href="https://ksbj.org"
               target="_blank"
@@ -394,20 +393,13 @@ export function SongDashboard({
           isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"
         }`}
       >
-        <div className={`flex items-center justify-between border-b px-5 py-4 ${isDark ? "border-slate-700" : "border-slate-200"}`}>
+        <div className={`border-b px-5 py-4 ${isDark ? "border-slate-700" : "border-slate-200"}`}>
           <div>
             <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>Songs</h2>
             <p className={`text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>
               Showing {filteredSongs.length === 0 ? 0 : pageStart + 1}–{Math.min(pageStart + pageSize, filteredSongs.length)} of {filteredSongs.length}
             </p>
           </div>
-          {latestSong ? (
-            <div className={`text-right text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-              <div className={`font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>Most recently played</div>
-              <div>{latestSong.title}</div>
-              <div>{latestSong.artist}</div>
-            </div>
-          ) : null}
         </div>
 
         <div className="overflow-x-auto">

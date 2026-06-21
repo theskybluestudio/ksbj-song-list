@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { DEFAULT_THEME, THEME_STORAGE_KEY, type ThemeMode } from "@/lib/theme";
 
+const GITHUB_REPO_URL = "https://github.com/theskybluestudio/ksbj-song-list";
+const PAYPAL_DONATE_URL = "https://www.paypal.com/donate/?hosted_button_id=QS8KGBQ6L9RGW";
+
 export function HomeDashboard() {
   const [theme, setTheme] = useState<ThemeMode>(DEFAULT_THEME);
   const [mounted, setMounted] = useState(false);
@@ -81,7 +84,57 @@ export function HomeDashboard() {
             </div>
           </Link>
         </section>
+
+        <section
+          className={`rounded-3xl border p-5 shadow-sm ${
+            isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"
+          }`}
+        >
+          <h2 className={`text-xl font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>Feedback</h2>
+          <p className={`mt-3 text-sm leading-7 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+            Found a bad song link, missing track, or bug? Share feedback or report issues on GitHub.
+          </p>
+          <div className="mt-4">
+            <a
+              href={`${GITHUB_REPO_URL}/issues`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={playButtonClass(isDark)}
+            >
+              Open GitHub Issues
+            </a>
+          </div>
+
+          <div className={`mt-5 border-t pt-5 ${isDark ? "border-slate-800" : "border-slate-200"}`}>
+            <h3 className={`text-base font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>Support this project</h3>
+            <p className={`mt-3 text-sm leading-7 ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+              This project was built to help KSBJ listeners quickly find recently played songs and enjoy the full playlist in one place.
+              If you find it useful, your support helps cover hosting, maintenance, and future improvements. Every contribution helps keep it going.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <a
+                href={PAYPAL_DONATE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={playButtonClass(isDark)}
+              >
+                Support with PayPal
+              </a>
+              <span className={`text-xs ${isDark ? "text-slate-500" : "text-slate-500"}`}>
+                Thank you for helping keep this project online and improving.
+              </span>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   );
+}
+
+function playButtonClass(isDark: boolean) {
+  return `inline-flex rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+    isDark
+      ? "border border-fuchsia-300/10 bg-zinc-800/45 text-slate-200 hover:bg-zinc-700/55"
+      : "border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
+  }`;
 }
