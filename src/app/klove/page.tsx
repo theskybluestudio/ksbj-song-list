@@ -62,17 +62,17 @@ export default async function KlovePage() {
           eyebrow: "K-LOVE song history",
           title: "K-LOVE Tracker",
           description:
-            "Track songs recently played on K-LOVE, browse the observed rotation, search by title or artist, and jump to the official K-LOVE songs page. This captures observed snapshots of K-LOVE's Recently Played feed over time.",
+            "Track songs recently played on K-LOVE, browse the observed rotation, search by title or artist, and jump into the full YouTube Music playlist. This captures observed snapshots of K-LOVE's Recently Played feed over time.",
           visitUrl: "https://www.klove.com/music/songs",
           visitLabel: "Visit K-LOVE songs",
           sampleDataMessage: "Run the K-LOVE collector to go live.",
           footerDisclaimer: "Unofficial K-LOVE song tracker. Not affiliated with or endorsed by K-LOVE.",
           actionCard: {
-            title: "Official songs page",
-            linkUrl: "https://www.klove.com/music/songs",
-            linkLabel: "klove.com ↗",
-            description: "Open the official K-LOVE songs page to browse recent, top, and new songs directly from the source.",
-            iconText: "↗",
+            title: "Full playlist",
+            linkUrl: "https://music.youtube.com/playlist?list=PLOAWRRt2EYayEZJylPcfd54RqM1kNWU3R&si=E1797JflE0nXRlLZ",
+            linkLabel: "music.youtube.com ↗",
+            description: "Open the complete K-LOVE playlist and browse all tracked songs in one place.",
+            iconText: "▶",
           },
         }}
       />
