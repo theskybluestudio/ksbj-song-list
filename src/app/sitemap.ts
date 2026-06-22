@@ -1,7 +1,10 @@
 import type { MetadataRoute } from "next";
+import { getArtistSummaries } from "@/lib/catalog";
 import { siteUrl } from "@/lib/site";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const artists = await getArtistSummaries();
+
   return [
     {
       url: siteUrl,
@@ -21,5 +24,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "hourly",
       priority: 0.8,
     },
+    {
+      url: `${siteUrl}/artists`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.7,
+    },
+    ...artists.map((artist) => ({
+      url: `${siteUrl}/artists/${artist.slug}`,
+      lastModified: artist.latestPlayedAt ? new Date(artist.latestPlayedAt) : new Date(),
+      changeFrequency: "daily" as const,
+      priority: 0.6,
+    })),
   ];
 }

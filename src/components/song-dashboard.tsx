@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { SourceNav } from "@/components/source-nav";
+import { buildArtistSlug } from "@/lib/slug";
 import type { SongRecord } from "@/lib/song-data";
 import { DEFAULT_THEME, THEME_STORAGE_KEY, type ThemeMode } from "@/lib/theme";
 
@@ -56,6 +58,10 @@ function getSongLink(song: SongRecord) {
 
 function getSongThumbnail(song: SongRecord) {
   return song.thumbnailUrl ?? song.raw["Thumbnail URL"] ?? song.raw["thumbnail url"] ?? null;
+}
+
+function getArtistHref(artist: string) {
+  return `/artists/${buildArtistSlug(artist)}`;
 }
 
 function getRecencyCutoff(option: RecencyOption) {
@@ -268,6 +274,17 @@ export function SongDashboard({
               {config.visitLabel} <span aria-hidden="true">↗</span>
             </a>
           </div>
+          <div className="flex flex-col gap-2 text-sm text-white/80 sm:flex-row sm:items-center sm:justify-between">
+            <a
+              href={config.actionCard.linkUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 self-start underline decoration-white/40 underline-offset-4 transition hover:decoration-white/80"
+            >
+              Playlist: {config.actionCard.linkLabel} <span aria-hidden="true">↗</span>
+            </a>
+            <div>{totalSongCount.toLocaleString()} songs in playlist</div>
+          </div>
           {usingSampleData ? <div className="text-sm font-medium text-white/85">{config.sampleDataMessage}</div> : null}
         </div>
       </section>
@@ -285,7 +302,11 @@ export function SongDashboard({
           isDark={isDark}
           secondary={(song) => `${song.seenCount?.toLocaleString() ?? "—"} plays`}
         />
-        <ActionBlock isDark={isDark} totalSongCount={totalSongCount} config={config.actionCard} />
+        <TopArtistsBlock
+          title="Top artists 5"
+          artists={topArtistsByPlayCount.slice(0, 5)}
+          isDark={isDark}
+        />
       </section>
 
       <section
@@ -398,7 +419,11 @@ export function SongDashboard({
                         <div className={`font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{song.title}</div>
                       </div>
                     </td>
-                    <td className={`px-5 py-3 ${isDark ? "text-slate-300" : "text-slate-700"}`}>{song.artist}</td>
+                    <td className={`px-5 py-3 ${isDark ? "text-slate-300" : "text-slate-700"}`}>
+                      <Link href={getArtistHref(song.artist)} className={`transition hover:underline ${isDark ? "hover:text-cyan-200" : "hover:text-sky-700"}`}>
+                        {song.artist}
+                      </Link>
+                    </td>
                     <td className={`px-5 py-3 text-right font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{song.seenCount?.toLocaleString() ?? "—"}</td>
                     <td className="px-5 py-3 text-right">
                       {songLink ? (
@@ -555,7 +580,11 @@ function TopSongsBlock({
                 )}
                 <div className="min-w-0">
                   <div className={`truncate text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{song.title}</div>
-                  <div className={`truncate text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>{song.artist}</div>
+                  <div className={`truncate text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                    <Link href={getArtistHref(song.artist)} className={`transition hover:underline ${isDark ? "hover:text-cyan-200" : "hover:text-sky-700"}`}>
+                      {song.artist}
+                    </Link>
+                  </div>
                 </div>
               </div>
               <div className="flex min-w-0 items-center justify-between gap-3 sm:shrink-0 sm:justify-start">
@@ -579,50 +608,38 @@ function TopSongsBlock({
   );
 }
 
-function ActionBlock({
+function TopArtistsBlock({
+  title,
+  artists,
   isDark,
-  totalSongCount,
-  config,
 }: {
+  title: string;
+  artists: ChartDatum[];
   isDark: boolean;
-  totalSongCount: number;
-  config: SongDashboardProps["config"]["actionCard"];
 }) {
   return (
     <section className={`min-w-0 rounded-3xl border p-5 shadow-sm ${isDark ? "border-slate-700 bg-slate-900" : "border-slate-200 bg-white"}`}>
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>{config.title}</h2>
-        <span className={`text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>{totalSongCount.toLocaleString()} songs</span>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>{title}</h2>
+        <span className={`text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>{artists.length} artists</span>
       </div>
-      <div
-        className={`flex flex-col gap-3 rounded-2xl px-4 pt-4 pb-3 ${
-          isDark ? "bg-slate-950/60" : "bg-slate-50"
-        }`}
-      >
-        <div className="space-y-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className={`text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{config.title}</div>
-            <a
-              href={config.linkUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`inline-flex items-center gap-2 rounded-full px-2.5 py-1 text-xs font-medium transition ${
-                isDark ? "bg-zinc-800/70 text-slate-300 hover:bg-zinc-700/80" : "bg-white text-slate-600 hover:bg-slate-100"
-              }`}
-            >
-              <span
-                aria-hidden="true"
-                className={`flex h-5 w-5 items-center justify-center rounded-full ${
-                  isDark ? "bg-rose-500/20 text-rose-300" : "bg-rose-100 text-rose-600"
-                }`}
-              >
-                {config.iconText ?? "↗"}
-              </span>
-              <span className="break-all sm:break-normal">{config.linkLabel}</span>
-            </a>
+      <div className="space-y-3">
+        {artists.map((artist, index) => (
+          <div key={`${title}-${artist.label}`} className={`flex items-start justify-between gap-3 rounded-2xl px-3 py-2 ${isDark ? "bg-slate-950/60" : "bg-slate-50"}`}>
+            <div className="flex min-w-0 items-start gap-3">
+              <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${isDark ? "bg-slate-800 text-slate-200" : "bg-slate-200 text-slate-700"}`}>
+                {index + 1}
+              </div>
+              <div className="min-w-0">
+                <div className={`truncate text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{artist.label}</div>
+                <div className={`truncate text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>{artist.subtitle ?? ""}</div>
+              </div>
+            </div>
+            <div className={`shrink-0 text-xs font-medium ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+              {artist.value.toLocaleString()} plays
+            </div>
           </div>
-          <p className={`text-sm leading-6 ${isDark ? "text-slate-400" : "text-slate-600"}`}>{config.description}</p>
-        </div>
+        ))}
       </div>
     </section>
   );
