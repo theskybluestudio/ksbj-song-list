@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import type { SongDataResult } from "@/lib/song-data";
+import { buildSongData, parseCsv, type SongDataResult } from "@/lib/song-data";
 
 const SAMPLE_SONGS: SongDataResult["songs"] = [
   {
@@ -11,7 +11,6 @@ const SAMPLE_SONGS: SongDataResult["songs"] = [
     dateText: "2026-06-21",
     timeText: "12:21 AM",
     seenCount: 1,
-    songLink: "https://www.klove.com/music/artists/casting-crowns/nobody-feat-matthew-west",
     raw: {},
   },
   {
@@ -22,10 +21,28 @@ const SAMPLE_SONGS: SongDataResult["songs"] = [
     dateText: "2026-06-21",
     timeText: "12:17 AM",
     seenCount: 1,
-    songLink: "https://www.klove.com/music/artists/we-the-kingdom/rescue-me",
     raw: {},
   },
 ];
+
+function getSheetUrl() {
+  const direct = process.env.KLOVE_SONGS_CSV_URL?.trim();
+  if (direct) {
+    return { url: direct, sourceLabel: "Published Google Sheet CSV" };
+  }
+
+  const sheetId = process.env.KLOVE_SHEET_ID?.trim();
+  if (!sheetId) {
+    return null;
+  }
+
+  const sheetTab = process.env.KLOVE_SHEET_TAB?.trim() || "KLOVE Master";
+  const encodedTab = encodeURIComponent(sheetTab);
+  return {
+    url: `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodedTab}`,
+    sourceLabel: `Google Sheet export (${sheetTab})`,
+  };
+}
 
 export async function getKloveSongData(): Promise<SongDataResult> {
   const cachePaths = [
@@ -43,6 +60,31 @@ export async function getKloveSongData(): Promise<SongDataResult> {
     } catch {
       // try the next cache path
     }
+  }
+
+  try {
+    const configuredSheet = getSheetUrl();
+    if (configuredSheet) {
+      const response = await fetch(configuredSheet.url, {
+        next: { revalidate: 300 },
+        headers: {
+          "User-Agent": "ksbj-song-list/1.0",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Sheet request failed: ${response.status}`);
+      }
+
+      const csvText = await response.text();
+      if (/<!doctype html|<html/i.test(csvText)) {
+        throw new Error("Sheet export returned HTML instead of CSV");
+      }
+
+      return buildSongData(parseCsv(csvText), configuredSheet.sourceLabel);
+    }
+  } catch {
+    // fall through to sample data
   }
 
   return {

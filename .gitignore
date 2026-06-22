@@ -35,7 +35,7 @@ yarn-error.log*
 !.env.example
 
 # generated data cache
-/data/songs.json
+/data/ksbj-songs.json
 /data/klove-songs.json
 
 # vercel

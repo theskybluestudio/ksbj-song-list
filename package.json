@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "sync": "node scripts/sync-sheet-to-json.mjs",
+    "sync:ksbj": "node scripts/sync-ksbj-sheet-to-json.mjs",
+    "sync:klove": "node scripts/sync-klove-sheet-to-json.mjs",
+    "sync": "npm run sync:ksbj && npm run sync:klove",
     "sync:and-build": "npm run sync && npm run build"
   },
   "dependencies": {

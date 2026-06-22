@@ -163,15 +163,15 @@ function mapRowToSong(row, index) {
 }
 
 function getSheetId() {
-  const sheetId = process.env.KSBJ_SONGS_SHEET_ID?.trim();
+  const sheetId = process.env.KLOVE_SHEET_ID?.trim();
   if (!sheetId) {
-    throw new Error("Missing KSBJ_SONGS_SHEET_ID or KSBJ_SONGS_CSV_URL in .env.local");
+    throw new Error("Missing KLOVE_SHEET_ID or KLOVE_SONGS_CSV_URL in .env.local");
   }
   return sheetId;
 }
 
 function getCsvUrl() {
-  return process.env.KSBJ_SONGS_CSV_URL?.trim() || null;
+  return process.env.KLOVE_SONGS_CSV_URL?.trim() || null;
 }
 
 async function gogJson(args) {
@@ -180,6 +180,29 @@ async function gogJson(args) {
     maxBuffer: 10 * 1024 * 1024,
   });
   return JSON.parse(stdout);
+}
+
+function shouldWriteSourceCache() {
+  const raw = process.env.SYNC_SOURCE_CACHE?.trim().toLowerCase();
+  if (!raw) return true;
+  return !["0", "false", "no", "off"].includes(raw);
+}
+
+async function writeRequiredCache(outPath, content) {
+  await mkdir(path.dirname(outPath), { recursive: true });
+  await writeFile(outPath, content, "utf8");
+}
+
+async function writeOptionalCache(outPath, content) {
+  try {
+    await mkdir(path.dirname(outPath), { recursive: true });
+    await writeFile(outPath, content, "utf8");
+    return true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`WARN: Skipped optional source cache write for ${outPath}: ${message}`);
+    return false;
+  }
 }
 
 function rowsFromValues(values) {
@@ -202,7 +225,7 @@ function sortSongs(records) {
 async function fetchRowsFromCsvUrl(csvUrl) {
   const response = await fetch(csvUrl, {
     headers: {
-      "User-Agent": "ksbj-song-list/1.0",
+      "User-Agent": "radio-song-list/1.0",
     },
   });
 
@@ -229,16 +252,10 @@ async function main() {
     sourceLabel = "Published Google Sheet CSV";
   } else {
     const sheetId = getSheetId();
-    const metadata = await gogJson(["sheets", "metadata", sheetId]);
-    const firstSheetTitle = metadata?.sheets?.[0]?.properties?.title;
-
-    if (!firstSheetTitle) {
-      throw new Error("Could not determine the first sheet tab title");
-    }
-
-    const valuesResponse = await gogJson(["sheets", "get", sheetId, `${firstSheetTitle}!A:Z`]);
+    const sheetTab = process.env.KLOVE_SHEET_TAB?.trim() || "KLOVE Master";
+    const valuesResponse = await gogJson(["sheets", "get", sheetId, `${sheetTab}!A:Z`]);
     rows = rowsFromValues(valuesResponse.values);
-    sourceLabel = `Google Sheets cache (${firstSheetTitle})`;
+    sourceLabel = `Google Sheets cache (${sheetTab})`;
   }
 
   const songs = sortSongs(rows.map((row, index) => mapRowToSong(row, index)).filter(Boolean));
@@ -251,17 +268,20 @@ async function main() {
   };
 
   const content = `${JSON.stringify(payload, null, 2)}\n`;
-  const cacheTargets = [
-    path.join(projectRoot, "sources", "ksbj", "data", "app-songs.json"),
-    path.join(appRoot, "data", "songs.json"),
-  ];
+  const appCachePath = path.join(appRoot, "data", "klove-songs.json");
+  const sourceCachePath = path.join(projectRoot, "sources", "klove", "data", "app-songs.json");
 
-  for (const outPath of cacheTargets) {
-    await mkdir(path.dirname(outPath), { recursive: true });
-    await writeFile(outPath, content, "utf8");
+  await writeRequiredCache(appCachePath, content);
+
+  const wrotePaths = [appCachePath];
+  if (shouldWriteSourceCache()) {
+    const wroteSource = await writeOptionalCache(sourceCachePath, content);
+    if (wroteSource) {
+      wrotePaths.unshift(sourceCachePath);
+    }
   }
 
-  console.log(`Wrote ${songs.length} songs to ${cacheTargets.join(", ")}`);
+  console.log(`Wrote ${songs.length} songs to ${wrotePaths.join(", ")}`);
 }
 
 main().catch((error) => {

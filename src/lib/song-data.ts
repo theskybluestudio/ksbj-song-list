@@ -209,15 +209,16 @@ function getSheetUrl() {
     return { url: direct, sourceLabel: "Published Google Sheet CSV" };
   }
 
-  const sheetId = process.env.KSBJ_SONGS_SHEET_ID?.trim();
+  const sheetId = process.env.KSBJ_SHEET_ID?.trim();
   if (!sheetId) {
     return null;
   }
 
-  const gid = process.env.KSBJ_SONGS_GID?.trim() || "0";
+  const sheetTab = process.env.KSBJ_SHEET_TAB?.trim() || "KSBJ Master";
+  const encodedTab = encodeURIComponent(sheetTab);
   return {
-    url: `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`,
-    sourceLabel: "Google Sheet export",
+    url: `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodedTab}`,
+    sourceLabel: `Google Sheet export (${sheetTab})`,
   };
 }
 
@@ -239,7 +240,7 @@ export function buildSongData(rows: Record<string, string>[], sourceLabel: strin
 async function readCachedSongData(): Promise<SongDataResult | null> {
   const cachePaths = [
     path.join(/*turbopackIgnore: true*/ process.cwd(), "..", "sources", "ksbj", "data", "app-songs.json"),
-    path.join(process.cwd(), "data", "songs.json"),
+    path.join(process.cwd(), "data", "ksbj-songs.json"),
   ];
 
   for (const cachePath of cachePaths) {

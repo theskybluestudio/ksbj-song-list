@@ -8,20 +8,20 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "K-LOVE Tracker | Sky Blue Studio Music Tracker",
   description:
-    "Browse recently played songs on K-LOVE, explore the captured rotation, and open the official songs page.",
+    "Browse recently played songs on K-LOVE, explore the captured rotation, and open the full YouTube Music playlist.",
   alternates: {
     canonical: "/klove",
   },
   openGraph: {
     title: "K-LOVE Tracker | Sky Blue Studio Music Tracker",
     description:
-      "Browse recently played songs on K-LOVE, explore the captured rotation, and open the official songs page.",
+      "Browse recently played songs on K-LOVE, explore the captured rotation, and open the full YouTube Music playlist.",
     url: "/klove",
   },
   twitter: {
     title: "K-LOVE Tracker | Sky Blue Studio Music Tracker",
     description:
-      "Browse recently played songs on K-LOVE, explore the captured rotation, and open the official songs page.",
+      "Browse recently played songs on K-LOVE, explore the captured rotation, and open the full YouTube Music playlist.",
   },
 };
 
@@ -30,7 +30,7 @@ const structuredData = {
   "@type": "CollectionPage",
   name: "K-LOVE Tracker",
   description:
-    "Browse recently played songs on K-LOVE, explore the captured rotation, and open the official songs page.",
+    "Browse recently played songs on K-LOVE, explore the captured rotation, and open the full YouTube Music playlist.",
   url: `${siteUrl}/klove`,
   inLanguage: "en-US",
   about: ["K-LOVE", "radio playlist", "Christian music"],
@@ -65,7 +65,7 @@ export default async function KlovePage() {
             "Track songs recently played on K-LOVE, browse the observed rotation, search by title or artist, and jump into the full YouTube Music playlist. This captures observed snapshots of K-LOVE's Recently Played feed over time.",
           visitUrl: "https://www.klove.com/music/songs",
           visitLabel: "Visit K-LOVE songs",
-          sampleDataMessage: "Run the K-LOVE collector to go live.",
+          sampleDataMessage: "Configure the K-LOVE sheet or run the collector to go live.",
           footerDisclaimer: "Unofficial K-LOVE song tracker. Not affiliated with or endorsed by K-LOVE.",
           actionCard: {
             title: "Full playlist",

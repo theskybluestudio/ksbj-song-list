@@ -38,19 +38,24 @@ NEXT_PUBLIC_SITE_URL=https://music.skybluestudio.net
 
 ### Option 1: easiest
 
-Publish the sheet as CSV, then set:
+Publish a station sheet as CSV, then set:
 
 ```bash
 KSBJ_SONGS_CSV_URL=https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=0
+KLOVE_SONGS_CSV_URL=https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=0
 ```
 
 ### Option 2
 
-Set these environment variables and the app will build the CSV export URL:
+Set these shared sheet variables and the app will read from the configured KSBJ tab:
 
 ```bash
-KSBJ_SONGS_SHEET_ID=your_sheet_id
-KSBJ_SONGS_GID=0
+KSBJ_SHEET_ID=your_sheet_id
+KSBJ_SHEET_TAB=KSBJ Master
+KSBJ_PLAY_LOG_SHEET_TAB=KSBJ Play Log
+KLOVE_SHEET_ID=your_sheet_id
+KLOVE_SHEET_TAB=KLOVE Master
+KLOVE_PLAY_LOG_SHEET_TAB=KLOVE Play Log
 ```
 
 Also set:
@@ -77,7 +82,7 @@ If your sheet uses separate `date` and `time` columns, that works too.
 - search by title or artist
 - sort and recency filters
 - basic stats
-- JSON cache support via `sources/ksbj/data/app-songs.json`, `sources/klove/data/app-songs.json`, and `application/data/*.json`
+- JSON cache support via `sources/ksbj/data/app-songs.json`, `sources/klove/data/app-songs.json`, `application/data/ksbj-songs.json`, and `application/data/klove-songs.json`
 - sample fallback data when a source cache is not available yet
 
 ## JSON sync flow
@@ -91,9 +96,28 @@ npm run sync
 ```
 
 That script:
-- fetches the Google Sheet CSV
+- fetches the KSBJ sheet data from either `KSBJ_SONGS_CSV_URL` or `KSBJ_SHEET_ID` + `KSBJ_SHEET_TAB`
 - normalizes rows into song objects
-- writes both `sources/ksbj/data/app-songs.json` and `application/data/songs.json`
+- always writes `application/data/ksbj-songs.json`
+- writes `sources/ksbj/data/app-songs.json` when source-cache writes are enabled
+- fetches the K-LOVE sheet data from either `KLOVE_SONGS_CSV_URL` or `KLOVE_SHEET_ID` + `KLOVE_SHEET_TAB`
+- always writes `application/data/klove-songs.json`
+- writes `sources/klove/data/app-songs.json` when source-cache writes are enabled
+
+You can also run each side separately:
+
+```bash
+npm run sync:ksbj
+npm run sync:klove
+```
+
+For standalone deployments that only contain the `application/` folder, set:
+
+```bash
+SYNC_SOURCE_CACHE=false
+```
+
+That keeps sync successful even when `../sources/...` is unavailable, while still refreshing the app-local caches under `application/data/`.
 
 This makes page loads less dependent on Google Sheets latency.
 
