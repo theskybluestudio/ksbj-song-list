@@ -33,7 +33,7 @@ export function SourceNav({
                 className={`inline-flex items-center rounded-full px-3 py-1.5 text-sm font-medium transition ${
                   isActive
                     ? isDark
-                      ? "bg-fuchsia-500/15 text-fuchsia-200 ring-1 ring-fuchsia-400/30"
+                      ? "bg-cyan-500/15 text-cyan-200 ring-1 ring-cyan-400/30"
                       : "bg-sky-100 text-sky-800 ring-1 ring-sky-300"
                     : isDark
                       ? "bg-slate-950 text-slate-300 hover:bg-slate-800"

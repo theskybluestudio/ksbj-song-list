@@ -234,7 +234,7 @@ export function SongDashboard({
       <section
         className={`rounded-3xl p-8 text-white shadow-lg ${
           isDark
-            ? "bg-linear-to-br from-zinc-950 via-slate-900 to-purple-950 shadow-black/35"
+            ? "bg-linear-to-br from-slate-950 via-slate-900 to-cyan-950 shadow-black/30"
             : "bg-linear-to-br from-sky-600 via-cyan-600 to-emerald-500 shadow-sky-950/20"
         }`}
       >
