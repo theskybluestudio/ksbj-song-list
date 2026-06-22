@@ -631,7 +631,11 @@ function TopArtistsBlock({
                 {index + 1}
               </div>
               <div className="min-w-0">
-                <div className={`truncate text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{artist.label}</div>
+                <div className={`truncate text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+                  <Link href={getArtistHref(artist.label)} className={`transition hover:underline ${isDark ? "hover:text-cyan-200" : "hover:text-sky-700"}`}>
+                    {artist.label}
+                  </Link>
+                </div>
                 <div className={`truncate text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>{artist.subtitle ?? ""}</div>
               </div>
             </div>
