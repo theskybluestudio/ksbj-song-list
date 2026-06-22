@@ -10,6 +10,7 @@ export type SongRecord = {
   timeText: string | null;
   seenCount: number | null;
   songLink?: string | null;
+  thumbnailUrl?: string | null;
   raw: Record<string, string>;
 };
 
@@ -80,6 +81,7 @@ const DATE_KEYS = ["date", "played_date", "day"];
 const TIME_KEYS = ["time", "played_time"];
 const COUNT_KEYS = ["seen count", "count", "plays", "play count"];
 const LINK_KEYS = ["song link", "link", "youtube music link", "yt music link"];
+const THUMBNAIL_KEYS = ["thumbnail", "thumbnail url", "image", "image url", "artwork", "artwork url", "cover", "cover url"];
 
 export function normalizeKey(value: string) {
   return value.trim().toLowerCase().replace(/[_-]+/g, " ");
@@ -161,6 +163,30 @@ function buildPlayedAt(dateText: string, timeText: string) {
   return parsed ?? null;
 }
 
+function extractYoutubeVideoId(link: string | null | undefined) {
+  if (!link) return null;
+
+  try {
+    const url = new URL(link);
+    if (url.hostname === "youtu.be") {
+      return url.pathname.replace(/^\//, "") || null;
+    }
+
+    if (["music.youtube.com", "www.youtube.com", "youtube.com"].includes(url.hostname)) {
+      return url.searchParams.get("v") || null;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function buildYoutubeThumbnailUrl(link: string | null | undefined) {
+  const videoId = extractYoutubeVideoId(link);
+  return videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null;
+}
+
 export function mapRowToSong(row: Record<string, string>, index: number): SongRecord | null {
   const normalized = normalizeRow(row);
   const title = firstValue(normalized, TITLE_KEYS);
@@ -170,6 +196,7 @@ export function mapRowToSong(row: Record<string, string>, index: number): SongRe
   const timeText = firstValue(normalized, TIME_KEYS) || null;
   const seenCountRaw = firstValue(normalized, COUNT_KEYS);
   const songLink = firstValue(normalized, LINK_KEYS) || null;
+  const thumbnailUrl = firstValue(normalized, THUMBNAIL_KEYS) || buildYoutubeThumbnailUrl(songLink);
 
   if (!title && !artist) {
     return null;
@@ -190,6 +217,7 @@ export function mapRowToSong(row: Record<string, string>, index: number): SongRe
     timeText,
     seenCount,
     songLink,
+    thumbnailUrl,
     raw: row,
   };
 }
@@ -238,8 +266,13 @@ export function buildSongData(rows: Record<string, string>[], sourceLabel: strin
 }
 
 async function readCachedSongData(): Promise<SongDataResult | null> {
+  const useSourceCache = !["0", "false", "no", "off"].includes(
+    process.env.SYNC_SOURCE_CACHE?.trim().toLowerCase() ?? "",
+  );
   const cachePaths = [
-    path.join(/*turbopackIgnore: true*/ process.cwd(), "..", "sources", "ksbj", "data", "app-songs.json"),
+    ...(useSourceCache
+      ? [path.join(/*turbopackIgnore: true*/ process.cwd(), "..", "sources", "ksbj", "data", "app-songs.json")]
+      : []),
     path.join(process.cwd(), "data", "ksbj-songs.json"),
   ];
 
@@ -305,4 +338,3 @@ export async function getSongData(): Promise<SongDataResult> {
     fetchedAt: new Date().toISOString(),
   };
 }
-

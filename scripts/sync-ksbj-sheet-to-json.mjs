@@ -108,6 +108,7 @@ const DATE_KEYS = ["date", "played_date", "day"];
 const TIME_KEYS = ["time", "played_time"];
 const COUNT_KEYS = ["seen count", "count", "plays", "play count"];
 const LINK_KEYS = ["song link", "link", "youtube music link", "yt music link"];
+const THUMBNAIL_KEYS = ["thumbnail", "thumbnail url", "image", "image url", "artwork", "artwork url", "cover", "cover url"];
 
 function firstValue(row, keys) {
   for (const key of keys) {
@@ -128,6 +129,30 @@ function buildPlayedAt(dateText, timeText) {
   return parsePlayedAt(`${dateText} ${timeText}`.trim());
 }
 
+function extractYoutubeVideoId(link) {
+  if (!link) return null;
+
+  try {
+    const url = new URL(link);
+    if (url.hostname === "youtu.be") {
+      return url.pathname.replace(/^\//, "") || null;
+    }
+
+    if (["music.youtube.com", "www.youtube.com", "youtube.com"].includes(url.hostname)) {
+      return url.searchParams.get("v") || null;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
+function buildYoutubeThumbnailUrl(link) {
+  const videoId = extractYoutubeVideoId(link);
+  return videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null;
+}
+
 function mapRowToSong(row, index) {
   const normalized = Object.fromEntries(
     Object.entries(row).map(([key, value]) => [normalizeKey(key), String(value).trim()]),
@@ -140,6 +165,7 @@ function mapRowToSong(row, index) {
   const timeText = firstValue(normalized, TIME_KEYS) || null;
   const seenCountRaw = firstValue(normalized, COUNT_KEYS);
   const songLink = firstValue(normalized, LINK_KEYS) || null;
+  const thumbnailUrl = firstValue(normalized, THUMBNAIL_KEYS) || buildYoutubeThumbnailUrl(songLink);
 
   if (!title && !artist) return null;
 
@@ -158,6 +184,7 @@ function mapRowToSong(row, index) {
     timeText,
     seenCount,
     songLink,
+    thumbnailUrl,
     raw: row,
   };
 }

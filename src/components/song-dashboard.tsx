@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { SourceNav } from "@/components/source-nav";
 import type { SongRecord } from "@/lib/song-data";
@@ -51,6 +52,10 @@ function formatPlayedDate(song: SongRecord) {
 
 function getSongLink(song: SongRecord) {
   return song.songLink ?? song.raw["Song Link"] ?? song.raw["song link"] ?? null;
+}
+
+function getSongThumbnail(song: SongRecord) {
+  return song.thumbnailUrl ?? song.raw["Thumbnail URL"] ?? song.raw["thumbnail url"] ?? null;
 }
 
 function getRecencyCutoff(option: RecencyOption) {
@@ -371,10 +376,28 @@ export function SongDashboard({
             <tbody className={isDark ? "divide-y divide-slate-800" : "divide-y divide-slate-100"}>
               {pagedSongs.map((song) => {
                 const songLink = getSongLink(song);
+                const thumbnailUrl = getSongThumbnail(song);
 
                 return (
                   <tr key={song.id} className={isDark ? "hover:bg-slate-800/80" : "hover:bg-slate-50/80"}>
-                    <td className={`px-5 py-3 font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{song.title}</td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        {thumbnailUrl ? (
+                          <Image
+                            src={thumbnailUrl}
+                            alt=""
+                            width={40}
+                            height={40}
+                            className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                            unoptimized
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className={`h-10 w-10 shrink-0 rounded-lg ${isDark ? "bg-slate-800" : "bg-slate-100"}`} />
+                        )}
+                        <div className={`font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{song.title}</div>
+                      </div>
+                    </td>
                     <td className={`px-5 py-3 ${isDark ? "text-slate-300" : "text-slate-700"}`}>{song.artist}</td>
                     <td className={`px-5 py-3 text-right font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{song.seenCount?.toLocaleString() ?? "—"}</td>
                     <td className="px-5 py-3 text-right">
@@ -509,6 +532,7 @@ function TopSongsBlock({
       <div className="space-y-3">
         {songs.map((song, index) => {
           const songLink = getSongLink(song);
+          const thumbnailUrl = getSongThumbnail(song);
 
           return (
             <div key={`${title}-${song.id}`} className={`flex flex-col gap-3 rounded-2xl px-3 py-2 sm:flex-row sm:items-start sm:justify-between ${isDark ? "bg-slate-950/60" : "bg-slate-50"}`}>
@@ -516,6 +540,19 @@ function TopSongsBlock({
                 <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${isDark ? "bg-slate-800 text-slate-200" : "bg-slate-200 text-slate-700"}`}>
                   {index + 1}
                 </div>
+                {thumbnailUrl ? (
+                  <Image
+                    src={thumbnailUrl}
+                    alt=""
+                    width={48}
+                    height={48}
+                    className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                    unoptimized
+                    loading="lazy"
+                  />
+                ) : (
+                  <div className={`h-12 w-12 shrink-0 rounded-lg ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
+                )}
                 <div className="min-w-0">
                   <div className={`truncate text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{song.title}</div>
                   <div className={`truncate text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>{song.artist}</div>

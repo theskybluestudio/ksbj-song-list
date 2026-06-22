@@ -45,8 +45,13 @@ function getSheetUrl() {
 }
 
 export async function getKloveSongData(): Promise<SongDataResult> {
+  const useSourceCache = !["0", "false", "no", "off"].includes(
+    process.env.SYNC_SOURCE_CACHE?.trim().toLowerCase() ?? "",
+  );
   const cachePaths = [
-    path.join(/*turbopackIgnore: true*/ process.cwd(), "..", "sources", "klove", "data", "app-songs.json"),
+    ...(useSourceCache
+      ? [path.join(/*turbopackIgnore: true*/ process.cwd(), "..", "sources", "klove", "data", "app-songs.json")]
+      : []),
     path.join(process.cwd(), "data", "klove-songs.json"),
   ];
 
