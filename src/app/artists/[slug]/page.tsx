@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getArtistSummaries, getArtistSummaryBySlug } from "@/lib/catalog";
+import { buildSongSlug } from "@/lib/slug";
 import { siteUrl } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
@@ -142,15 +143,33 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
           <div className="divide-y divide-slate-800">
             {artist.songs.map((song) => (
               <div key={`${song.source}-${song.id}`} className="grid gap-3 px-5 py-4 md:grid-cols-[minmax(0,2fr)_96px_96px_140px] md:items-center">
-                <div className="min-w-0">
-                  <div className="truncate text-base font-medium text-slate-100">{song.title}</div>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-400">
-                    <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-300">{sourceLabel(song.source)}</span>
-                    {song.songLink ? (
-                      <a href={song.songLink} target="_blank" rel="noopener noreferrer" className="hover:text-slate-200">
-                        Listen ↗
-                      </a>
-                    ) : null}
+                <div className="flex min-w-0 items-start gap-3">
+                  {song.thumbnailUrl ? (
+                    <Image
+                      src={song.thumbnailUrl}
+                      alt=""
+                      width={48}
+                      height={48}
+                      className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="h-12 w-12 shrink-0 rounded-lg bg-slate-800" />
+                  )}
+                  <div className="min-w-0">
+                    <div className="truncate text-base font-medium text-slate-100">
+                      <Link href={`/songs/${buildSongSlug(song.title, song.artist)}`} className="hover:text-slate-200 hover:underline">
+                        {song.title}
+                      </Link>
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-400">
+                      <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs font-medium text-slate-300">{sourceLabel(song.source)}</span>
+                      {song.songLink ? (
+                        <a href={song.songLink} target="_blank" rel="noopener noreferrer" className="hover:text-slate-200">
+                          Listen ↗
+                        </a>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
                 <div className="text-sm text-slate-300">{song.seenCount?.toLocaleString() ?? "—"} plays</div>
@@ -168,4 +187,3 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
     </main>
   );
 }
-

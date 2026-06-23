@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { SourceNav } from "@/components/source-nav";
-import { buildArtistSlug } from "@/lib/slug";
+import { buildArtistSlug, buildSongSlug } from "@/lib/slug";
 import type { SongRecord } from "@/lib/song-data";
 import { DEFAULT_THEME, THEME_STORAGE_KEY, type ThemeMode } from "@/lib/theme";
 
@@ -62,6 +62,10 @@ function getSongThumbnail(song: SongRecord) {
 
 function getArtistHref(artist: string) {
   return `/artists/${buildArtistSlug(artist)}`;
+}
+
+function getSongHref(song: SongRecord) {
+  return `/songs/${buildSongSlug(song.title, song.artist)}`;
 }
 
 function getRecencyCutoff(option: RecencyOption) {
@@ -416,7 +420,11 @@ export function SongDashboard({
                         ) : (
                           <div className={`h-10 w-10 shrink-0 rounded-lg ${isDark ? "bg-slate-800" : "bg-slate-100"}`} />
                         )}
-                        <div className={`font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{song.title}</div>
+                        <div className={`font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+                          <Link href={getSongHref(song)} className={`transition hover:underline ${isDark ? "hover:text-cyan-200" : "hover:text-sky-700"}`}>
+                            {song.title}
+                          </Link>
+                        </div>
                       </div>
                     </td>
                     <td className={`px-5 py-3 ${isDark ? "text-slate-300" : "text-slate-700"}`}>
@@ -579,7 +587,11 @@ function TopSongsBlock({
                   <div className={`h-12 w-12 shrink-0 rounded-lg ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
                 )}
                 <div className="min-w-0">
-                  <div className={`truncate text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>{song.title}</div>
+                  <div className={`truncate text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+                    <Link href={getSongHref(song)} className={`transition hover:underline ${isDark ? "hover:text-cyan-200" : "hover:text-sky-700"}`}>
+                      {song.title}
+                    </Link>
+                  </div>
                   <div className={`truncate text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>
                     <Link href={getArtistHref(song.artist)} className={`transition hover:underline ${isDark ? "hover:text-cyan-200" : "hover:text-sky-700"}`}>
                       {song.artist}

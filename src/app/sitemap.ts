@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
-import { getArtistSummaries } from "@/lib/catalog";
+import { getArtistSummaries, getSongSummaries } from "@/lib/catalog";
 import { siteUrl } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const artists = await getArtistSummaries();
+  const songs = await getSongSummaries();
 
   return [
     {
@@ -30,9 +31,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.7,
     },
+    {
+      url: `${siteUrl}/songs`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.7,
+    },
     ...artists.map((artist) => ({
       url: `${siteUrl}/artists/${artist.slug}`,
       lastModified: artist.latestPlayedAt ? new Date(artist.latestPlayedAt) : new Date(),
+      changeFrequency: "daily" as const,
+      priority: 0.6,
+    })),
+    ...songs.map((song) => ({
+      url: `${siteUrl}/songs/${song.slug}`,
+      lastModified: song.latestPlayedAt ? new Date(song.latestPlayedAt) : new Date(),
       changeFrequency: "daily" as const,
       priority: 0.6,
     })),

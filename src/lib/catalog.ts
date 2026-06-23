@@ -1,6 +1,6 @@
 import { getKloveSongData } from "@/lib/klove-song-data";
 import { type SongRecord, getSongData } from "@/lib/song-data";
-import { buildArtistSlug } from "@/lib/slug";
+import { buildArtistSlug, buildSongSlug } from "@/lib/slug";
 
 export type SourceKey = "ksbj" | "klove";
 
@@ -19,8 +19,24 @@ export type ArtistSummary = {
   thumbnailUrl: string | null;
 };
 
+export type SongSummary = {
+  slug: string;
+  title: string;
+  artist: string;
+  totalSeenCount: number;
+  latestPlayedAt: string | null;
+  sources: SourceKey[];
+  variants: CatalogSongRecord[];
+  thumbnailUrl: string | null;
+  primarySongLink: string | null;
+};
+
 function normalizeArtistName(name: string) {
   return name.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function normalizeSongKey(title: string, artist: string) {
+  return `${title.trim().toLowerCase().replace(/\s+/g, " ")}::${normalizeArtistName(artist)}`;
 }
 
 function compareSongsByRecency(a: SongRecord, b: SongRecord) {
@@ -88,3 +104,50 @@ export async function getArtistSummaryBySlug(slug: string) {
   return artists.find((artist) => artist.slug === slug) ?? null;
 }
 
+export async function getSongSummaries(): Promise<SongSummary[]> {
+  const songs = await getAllSourceSongs();
+  const bySong = new Map<string, CatalogSongRecord[]>();
+
+  for (const song of songs) {
+    const key = normalizeSongKey(song.title, song.artist);
+    const current = bySong.get(key) ?? [];
+    current.push(song);
+    bySong.set(key, current);
+  }
+
+  return [...bySong.entries()]
+    .map(([, songVariants]) => {
+      const variants = [...songVariants].sort(compareSongsByRecency);
+      const primary = variants[0];
+      const sources = [...new Set(variants.map((song) => song.source))].sort() as SourceKey[];
+      const latestPlayedAt = variants.find((song) => song.playedAt)?.playedAt ?? null;
+      const totalSeenCount = variants.reduce((sum, song) => sum + (song.seenCount ?? 0), 0);
+      const thumbnailUrl = variants.find((song) => song.thumbnailUrl)?.thumbnailUrl ?? null;
+      const primarySongLink = variants.find((song) => song.songLink)?.songLink ?? null;
+
+      return {
+        slug: buildSongSlug(primary?.title ?? "Unknown title", primary?.artist ?? "Unknown artist"),
+        title: primary?.title ?? "Unknown title",
+        artist: primary?.artist ?? "Unknown artist",
+        totalSeenCount,
+        latestPlayedAt,
+        sources,
+        variants,
+        thumbnailUrl,
+        primarySongLink,
+      } satisfies SongSummary;
+    })
+    .sort((a, b) => {
+      const seenComparison = b.totalSeenCount - a.totalSeenCount;
+      if (seenComparison !== 0) return seenComparison;
+      const latestA = a.latestPlayedAt ?? "";
+      const latestB = b.latestPlayedAt ?? "";
+      if (latestA !== latestB) return latestA < latestB ? 1 : -1;
+      return a.title.localeCompare(b.title) || a.artist.localeCompare(b.artist);
+    });
+}
+
+export async function getSongSummaryBySlug(slug: string) {
+  const songs = await getSongSummaries();
+  return songs.find((song) => song.slug === slug) ?? null;
+}
