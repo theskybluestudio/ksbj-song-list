@@ -39,6 +39,8 @@ type ChartDatum = {
   label: string;
   value: number;
   subtitle?: string;
+  href?: string;
+  thumbnailUrl?: string | null;
 };
 
 
@@ -66,6 +68,10 @@ function getArtistHref(artist: string) {
 
 function getSongHref(song: SongRecord) {
   return `/songs/${buildSongSlug(song.title, song.artist)}`;
+}
+
+function getVisitButtonLabel(label: string) {
+  return label.replace(/^visit\s+/i, "").replace(/\s+songs$/i, "");
 }
 
 function getRecencyCutoff(option: RecencyOption) {
@@ -113,18 +119,26 @@ function sortSongs(songs: SongRecord[], column: SortColumn, direction: SortDirec
 }
 
 function buildTopArtistsByPlayCount(songs: SongRecord[], limit = 8): ChartDatum[] {
-  const totals = new Map<string, { value: number; songs: number }>();
+  const totals = new Map<string, { value: number; songs: number; thumbnailUrl: string | null }>();
 
   for (const song of songs) {
-    const current = totals.get(song.artist) ?? { value: 0, songs: 0 };
+    const current = totals.get(song.artist) ?? { value: 0, songs: 0, thumbnailUrl: null };
+    const thumbnailUrl = current.thumbnailUrl ?? getSongThumbnail(song);
     totals.set(song.artist, {
       value: current.value + (song.seenCount ?? 0),
       songs: current.songs + 1,
+      thumbnailUrl,
     });
   }
 
   return [...totals.entries()]
-    .map(([label, stats]) => ({ label, value: stats.value, subtitle: `${stats.songs} songs` }))
+    .map(([label, stats]) => ({
+      label,
+      value: stats.value,
+      subtitle: `${stats.songs} songs`,
+      href: getArtistHref(label),
+      thumbnailUrl: stats.thumbnailUrl,
+    }))
     .sort((a, b) => b.value - a.value || a.label.localeCompare(b.label))
     .slice(0, limit);
 }
@@ -268,32 +282,47 @@ export function SongDashboard({
           </div>
           <p className="text-sm leading-7 text-white/85 sm:text-base">{config.description}</p>
           <div className="flex flex-col gap-2 text-sm text-white/80 sm:flex-row sm:items-center sm:justify-between">
-            <div>Updated: {new Intl.DateTimeFormat("en-US", { year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(fetchedAt))}</div>
-            <a
-              href={config.visitUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 self-start underline decoration-white/40 underline-offset-4 transition hover:decoration-white/80 sm:self-auto"
-            >
-              {config.visitLabel} <span aria-hidden="true">↗</span>
-            </a>
-          </div>
-          <div className="flex flex-col gap-2 text-sm text-white/80 sm:flex-row sm:items-center sm:justify-between">
-            <a
-              href={config.actionCard.linkUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 self-start underline decoration-white/40 underline-offset-4 transition hover:decoration-white/80"
-            >
-              Playlist: {config.actionCard.linkLabel} <span aria-hidden="true">↗</span>
-            </a>
-            <div>{totalSongCount.toLocaleString()} songs in playlist</div>
+            <div>
+              Updated: {new Intl.DateTimeFormat("en-US", { year: "numeric", month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(fetchedAt))} ({totalSongCount.toLocaleString()} songs)
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+              <a
+                href={config.visitUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex min-h-10 items-center gap-2 self-start rounded-full px-3 py-2 text-sm font-medium transition sm:self-auto ${
+                  isDark
+                    ? "bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/15"
+                    : "bg-white/20 text-white ring-1 ring-white/30 hover:bg-white/30"
+                }`}
+              >
+                <span>Visit {getVisitButtonLabel(config.visitLabel)}</span>
+              </a>
+              <a
+                href={config.actionCard.linkUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex min-h-10 items-center gap-2 self-start rounded-full px-3 py-2 text-sm font-medium transition sm:self-auto ${
+                  isDark
+                    ? "bg-white/10 text-white ring-1 ring-white/15 hover:bg-white/15"
+                    : "bg-white/20 text-white ring-1 ring-white/30 hover:bg-white/30"
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white"
+                >
+                  ▶
+                </span>
+                <span>Launch playlist on YouTube Music</span>
+              </a>
+            </div>
           </div>
           {usingSampleData ? <div className="text-sm font-medium text-white/85">{config.sampleDataMessage}</div> : null}
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="space-y-4">
         <TopSongsBlock
           title="Last played 5"
           songs={recentlyPlayedSongs}
@@ -562,55 +591,56 @@ function TopSongsBlock({
         <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>{title}</h2>
         <span className={`text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>{songs.length} songs</span>
       </div>
-      <div className="space-y-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {songs.map((song, index) => {
           const songLink = getSongLink(song);
           const thumbnailUrl = getSongThumbnail(song);
 
           return (
-            <div key={`${title}-${song.id}`} className={`flex flex-col gap-3 rounded-2xl px-3 py-2 sm:flex-row sm:items-start sm:justify-between ${isDark ? "bg-slate-950/60" : "bg-slate-50"}`}>
-              <div className="flex min-w-0 items-start gap-3">
-                <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${isDark ? "bg-slate-800 text-slate-200" : "bg-slate-200 text-slate-700"}`}>
-                  {index + 1}
-                </div>
+            <div key={`${title}-${song.id}`} className={`overflow-hidden rounded-2xl ${isDark ? "bg-slate-950/60 ring-1 ring-slate-800" : "bg-slate-50 ring-1 ring-slate-200"}`}>
+              <div className="relative aspect-square overflow-hidden">
                 {thumbnailUrl ? (
                   <Image
                     src={thumbnailUrl}
                     alt=""
-                    width={48}
-                    height={48}
-                    className="h-12 w-12 shrink-0 rounded-lg object-cover"
+                    fill
+                    className="object-cover"
                     unoptimized
                     loading="lazy"
                   />
                 ) : (
-                  <div className={`h-12 w-12 shrink-0 rounded-lg ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
+                  <div className={`h-full w-full ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
                 )}
-                <div className="min-w-0">
-                  <div className={`truncate text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>
-                    <Link href={getSongHref(song)} className={`transition hover:underline ${isDark ? "hover:text-cyan-200" : "hover:text-sky-700"}`}>
-                      {song.title}
-                    </Link>
-                  </div>
-                  <div className={`truncate text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>
-                    <Link href={getArtistHref(song.artist)} className={`transition hover:underline ${isDark ? "hover:text-cyan-200" : "hover:text-sky-700"}`}>
-                      {song.artist}
-                    </Link>
+                <div className="absolute left-3 top-3">
+                  <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold backdrop-blur ${isDark ? "bg-slate-950/80 text-slate-100" : "bg-white/90 text-slate-900"}`}>
+                    {index + 1}
                   </div>
                 </div>
               </div>
-              <div className="flex min-w-0 items-center justify-between gap-3 sm:shrink-0 sm:justify-start">
-                <div className={`min-w-0 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>{secondary(song)}</div>
-                {songLink ? (
-                  <a
-                    href={songLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={playButtonClass(isDark)}
-                  >
-                    Play
-                  </a>
-                ) : null}
+              <div className="space-y-2 p-4">
+                <div className={`truncate text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+                  <Link href={getSongHref(song)} className={`transition hover:underline ${isDark ? "hover:text-cyan-200" : "hover:text-sky-700"}`}>
+                    {song.title}
+                  </Link>
+                </div>
+                <div className={`truncate text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>
+                  <Link href={getArtistHref(song.artist)} className={`transition hover:underline ${isDark ? "hover:text-cyan-200" : "hover:text-sky-700"}`}>
+                    {song.artist}
+                  </Link>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className={`min-w-0 text-xs ${isDark ? "text-slate-400" : "text-slate-500"}`}>{secondary(song)}</div>
+                  {songLink ? (
+                    <a
+                      href={songLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={playButtonClass(isDark)}
+                    >
+                      Play
+                    </a>
+                  ) : null}
+                </div>
               </div>
             </div>
           );
@@ -635,24 +665,38 @@ function TopArtistsBlock({
         <h2 className={`text-lg font-semibold ${isDark ? "text-slate-100" : "text-slate-900"}`}>{title}</h2>
         <span className={`text-sm ${isDark ? "text-slate-400" : "text-slate-500"}`}>{artists.length} artists</span>
       </div>
-      <div className="space-y-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {artists.map((artist, index) => (
-          <div key={`${title}-${artist.label}`} className={`flex items-start justify-between gap-3 rounded-2xl px-3 py-2 ${isDark ? "bg-slate-950/60" : "bg-slate-50"}`}>
-            <div className="flex min-w-0 items-start gap-3">
-              <div className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${isDark ? "bg-slate-800 text-slate-200" : "bg-slate-200 text-slate-700"}`}>
-                {index + 1}
-              </div>
-              <div className="min-w-0">
-                <div className={`truncate text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>
-                  <Link href={getArtistHref(artist.label)} className={`transition hover:underline ${isDark ? "hover:text-cyan-200" : "hover:text-sky-700"}`}>
-                    {artist.label}
-                  </Link>
+          <div key={`${title}-${artist.label}`} className={`overflow-hidden rounded-2xl ${isDark ? "bg-slate-950/60 ring-1 ring-slate-800" : "bg-slate-50 ring-1 ring-slate-200"}`}>
+            <div className="relative aspect-square overflow-hidden">
+              {artist.thumbnailUrl ? (
+                <Image
+                  src={artist.thumbnailUrl}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  unoptimized
+                  loading="lazy"
+                />
+              ) : (
+                <div className={`h-full w-full ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
+              )}
+              <div className="absolute left-3 top-3">
+                <div className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold backdrop-blur ${isDark ? "bg-slate-950/80 text-slate-100" : "bg-white/90 text-slate-900"}`}>
+                  {index + 1}
                 </div>
-                <div className={`truncate text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>{artist.subtitle ?? ""}</div>
               </div>
             </div>
-            <div className={`shrink-0 text-xs font-medium ${isDark ? "text-slate-300" : "text-slate-600"}`}>
-              {artist.value.toLocaleString()} plays
+            <div className="space-y-2 p-4">
+              <div className={`truncate text-sm font-medium ${isDark ? "text-slate-100" : "text-slate-900"}`}>
+                <Link href={artist.href ?? getArtistHref(artist.label)} className={`transition hover:underline ${isDark ? "hover:text-cyan-200" : "hover:text-sky-700"}`}>
+                  {artist.label}
+                </Link>
+              </div>
+              <div className={`truncate text-sm ${isDark ? "text-slate-400" : "text-slate-600"}`}>{artist.subtitle ?? ""}</div>
+              <div className={`text-xs font-medium ${isDark ? "text-slate-300" : "text-slate-600"}`}>
+                {artist.value.toLocaleString()} plays
+              </div>
             </div>
           </div>
         ))}
