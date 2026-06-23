@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { getArtistSummaries, getArtistSummaryBySlug } from "@/lib/catalog";
 import { buildSongSlug } from "@/lib/slug";
 import { siteUrl } from "@/lib/site";
+import type { CatalogSongRecord } from "@/lib/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,10 @@ function formatDate(value: string | null) {
 
 function sourceLabel(source: "ksbj" | "klove") {
   return source === "ksbj" ? "KSBJ" : "K-LOVE";
+}
+
+function getSongThumbnail(song: CatalogSongRecord) {
+  return song.thumbnailUrl ?? song.raw["Thumbnail URL"] ?? song.raw["thumbnail url"] ?? null;
 }
 
 export async function generateStaticParams() {
@@ -144,9 +149,9 @@ export default async function ArtistPage({ params }: ArtistPageProps) {
             {artist.songs.map((song) => (
               <div key={`${song.source}-${song.id}`} className="grid gap-3 px-5 py-4 md:grid-cols-[minmax(0,2fr)_96px_96px_140px] md:items-center">
                 <div className="flex min-w-0 items-start gap-3">
-                  {song.thumbnailUrl ? (
+                  {getSongThumbnail(song) ? (
                     <Image
-                      src={song.thumbnailUrl}
+                      src={getSongThumbnail(song)!}
                       alt=""
                       width={48}
                       height={48}
