@@ -46,7 +46,7 @@ export const metadata: Metadata = {
     siteName,
     images: [
       {
-        url: "/opengraph-image",
+        url: "/opengraph-image.png",
         width: 1200,
         height: 630,
         alt: "Sky Blue Studio Music Tracker preview image",
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Sky Blue Studio Music Tracker",
     description: siteDescription,
-    images: ["/opengraph-image"],
+    images: ["/opengraph-image.png"],
   },
 };
 
